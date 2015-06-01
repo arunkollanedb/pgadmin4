@@ -9,7 +9,7 @@
 
 """Defines the models for the configuration database.
 
-If any of the models are updated, you (yes, you, the developer) MUST do two 
+If any of the models are updated, you (yes, you, the developer) MUST do two
 things:
 
 1) Increment SETTINGS_SCHEMA_VERSION in config.py
@@ -28,12 +28,13 @@ roles_users = db.Table('roles_users',
         db.Column('user_id', db.Integer(), db.ForeignKey('user.id')),
         db.Column('role_id', db.Integer(), db.ForeignKey('role.id')))
 
+
 class Version(db.Model):
     """Version numbers for reference/upgrade purposes"""
     __tablename__ = 'version'
     name = db.Column(db.String(32), primary_key=True)
     value = db.Column(db.Integer(), nullable=False)
-    
+
 class Role(db.Model, RoleMixin):
     """Define a security role"""
     __tablename__ = 'role'
@@ -51,7 +52,7 @@ class User(db.Model, UserMixin):
     confirmed_at = db.Column(db.DateTime())
     roles = db.relationship('Role', secondary=roles_users,
                             backref=db.backref('users', lazy='dynamic'))
-    
+
 class Setting(db.Model):
     """Define a setting object"""
     __tablename__ = 'setting'
@@ -64,21 +65,37 @@ class ServerGroup(db.Model):
     __tablename__ = 'servergroup'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
     name = db.Column(db.String(128), nullable=False)
     __table_args__ = (db.UniqueConstraint('user_id', 'name'),)
-    
+
 
 class Server(db.Model):
     """Define a registered Postgres server"""
     __tablename__ = 'server'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    servergroup_id = db.Column(db.Integer, db.ForeignKey('servergroup.id'), nullable=False)
+    user_id = db.Column(
+            db.Integer,
+            db.ForeignKey('user.id'),
+            nullable=False
+            )
+    servergroup_id = db.Column(
+            db.Integer,
+            db.ForeignKey('servergroup.id'),
+            nullable=False
+            )
+
     name = db.Column(db.String(128), nullable=False)
     host = db.Column(db.String(128), nullable=False)
-    port = db.Column(db.Integer(), db.CheckConstraint('port >= 1024 AND port <= 65534'), nullable=False)
+    port = db.Column(
+            db.Integer(),
+            db.CheckConstraint('port >= 1024 AND port <= 65534'),
+            nullable=False)
     maintenance_db = db.Column(db.String(64), nullable=False)
     username = db.Column(db.String(64), nullable=False)
-    ssl_mode = db.Column(db.String(16), nullable=False)
-    
-    
+    ssl_mode = db.Column(
+        db.String(16),
+        db.CheckConstraint(
+            "ssl_mode IN ('allow', 'prefer', 'require', 'disable', 'verify-ca', 'verify-full')"
+        ),
+        nullable=False)

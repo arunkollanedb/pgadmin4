@@ -6,10 +6,254 @@
 # This software is released under the PostgreSQL Licence
 #
 ##########################################################################
+"""Defines views for management of server groups"""
 
-# Node meta data
-NODE_TYPE = 'server-group'
-NODE_PATH = '/browser/nodes/' + NODE_TYPE
+from abc import ABCMeta, abstractmethod
+import traceback
+import json
+from flask import Blueprint, Response, current_app, request, render_template, \
+        make_response, url_for
+from flask.ext.babel import gettext
+from flask.ext.security import current_user, login_required
+from pgadmin import current_blueprint
+from pgadmin.utils.ajax import make_json_response, make_response as ajax_response
+from pgadmin.browser import BrowserPluginModule
+from pgadmin.utils.menu import MenuItem
+from pgadmin.settings.settings_model import db, ServerGroup
+import config
 
-# Define the child node list
-sub_nodes = [ ]
+
+class ServerGroupModule(BrowserPluginModule):
+
+    NODE_TYPE = "server-group"
+
+    def get_own_menuitems(self):
+        return {
+            'standard_items': [
+                ServerGroupMenuItem(action="drop", priority=10, function="drop_server_group"),
+                ServerGroupMenuItem(action="rename", priority=10, function="rename_server_group")
+            ],
+            'create_items': [
+                ServerGroupMenuItem(name="create_server_group",
+                                    label=gettext('Server Group...'),
+                                    priority=10,
+                                    function="create_server_group",
+                                    types=[self.node_type])
+            ],
+            'context_items': [
+                ServerGroupMenuItem(name="delete_server_group",
+                                    label=gettext('Delete server group'),
+                                    priority=10,
+                                    onclick='drop_server_group(item);'),
+                ServerGroupMenuItem(name="rename_server_group",
+                                    label=gettext('Rename server group...'),
+                                    priority=10,
+                                    onclick='rename_server_group(item);')
+            ]
+        }
+
+
+    def get_nodes(self, **kwargs):
+        """Return a JSON document listing the server groups for the user"""
+        groups = ServerGroup.query.filter_by(user_id=current_user.id)
+        for group in groups:
+            group = self.generate_browser_node(
+                    "%d" % (group.id),
+                    None,
+                    group.name,
+                    "icon-%s" % self.node_type,
+                    True)
+            yield group
+
+    @property
+    def node_type(self):
+        return self.NODE_TYPE
+
+    @property
+    def script_load(self):
+        return None
+
+    @property
+    def node_path(self):
+        return BrowserPluginModule.browser_url_prefix + self.node_type
+
+
+class ServerGroupMenuItem(MenuItem):
+
+    def __init__(self, **kwargs):
+        kwargs.setdefault("type", ServerGroupModule.NODE_TYPE)
+        super(ServerGroupMenuItem, self).__init__(**kwargs)
+
+
+class ServerGroupPluginModule(BrowserPluginModule):
+    """
+    Base class for server group plugins.
+    """
+
+    __metaclass__ = ABCMeta
+
+
+    @abstractmethod
+    def get_nodes(self, servergroup):
+        pass
+
+
+    @property
+    def node_path(self):
+        return BrowserPluginModule.browser_url_prefix + self.node_type
+
+
+blueprint = ServerGroupModule( __name__, static_url_path='')
+
+@blueprint.route('/module.js')
+@login_required
+def module():
+    return make_response(
+        render_template("server_groups/server_groups.js"),
+        200, {'Content-Type': 'application/x-javascript'});
+
+
+# Initialise the module
+from pgadmin.browser.utils import NodeView
+
+
+class ServerGroupView(NodeView):
+
+    node_type = ServerGroupModule.NODE_TYPE
+    parent_ids = []
+    ids = [{'type':'int', 'id':'gid'}]
+
+
+    def list(self):
+        res = []
+        for g in blueprint.get_nodes():
+            res.append(g)
+        return make_json_response(result=res)
+
+
+    def delete(self, gid):
+        """Delete a server group node in the settings database"""
+
+        # There can be only one record at most
+        servergroup = ServerGroup.query.filter_by(
+                user_id=current_user.id,
+                id=gid)
+
+        if servergroup is None:
+            return make_json_response(
+                    status=417,
+                    success=0,
+                    errormsg=gettext('The specified server group could not be found.'))
+        else:
+            try:
+                db.session.delete(servergroup)
+                db.session.commit()
+            except Exception as e:
+                return make_json_response(status=410, success=0, errormsg=e.message)
+
+        return make_json_response(result=request.form)
+
+
+    def update(self, gid):
+        """Update the server-group properties"""
+
+        # There can be only one record at most
+        servergroup = ServerGroup.query.filter_by(
+                user_id=current_user.id,
+                id=gid).first()
+
+        data = request.form if request.form else json.loads(request.data)
+
+        if servergroup is None:
+            return make_json_response(
+                    status=417,
+                    success=0,
+                    errormsg=gettext('The specified server group could not be found.'))
+        else:
+            try:
+                if u'name' in data:
+                    servergroup.name = data[u'name']
+                db.session.commit()
+            except Exception as e:
+                return make_json_response(status=410, success=0, errormsg=e.message)
+
+        return make_json_response(result=request.form)
+
+
+    def properties(self, gid):
+        """Update the server-group properties"""
+
+        # There can be only one record at most
+        sg = ServerGroup.query.filter_by(
+                user_id=current_user.id,
+                id=gid).first()
+        data = {}
+
+        if sg is None:
+            return make_json_response(
+                    status=417,
+                    success=0,
+                    errormsg=gettext('The specified server group could not be found.'))
+        else:
+            return ajax_response(response={'id': sg.id, 'name': sg.name},
+                    status=200)
+
+
+    def create(self):
+        data = request.form if request.form else json.loads(request.data)
+
+        if data[u'name'] != '':
+            try:
+                servergroup = ServerGroup(
+                    user_id=current_user.id,
+                    name=data[u'name'])
+                db.session.add(servergroup)
+                db.session.commit()
+
+                data[u'id'] = servergroup.id
+                data[u'name'] = servergroup.name
+
+                return make_json_response(status=200, success=1, data=data)
+            except Exception as e:
+                print 'except'
+                return make_json_response(
+                        status=410,
+                        success=0,
+                        errormsg=e.message)
+
+        else:
+            return make_json_response(
+                    status=417,
+                    success=0,
+                    errormsg=gettext('No server group name was specified'))
+
+
+    def nodes(self, gid):
+        """Build a list of treeview nodes from the child nodes."""
+        nodes = []
+        for module in blueprint.submodules:
+            nodes.extend(module.get_nodes(server_group=gid))
+        return make_json_response(data=nodes)
+
+
+    def sql(self, gid):
+        return make_json_response(status=422)
+
+
+    def modified_sql(self, gid):
+        return make_json_response(status=422)
+
+
+    def statistics(self, gid):
+        return make_json_response(status=422)
+
+
+    def dependencies(self, gid):
+        return make_json_response(status=422)
+
+
+    def dependents(self, gid):
+        return make_json_response(status=422)
+
+
+ServerGroupView.register_node_view(blueprint)

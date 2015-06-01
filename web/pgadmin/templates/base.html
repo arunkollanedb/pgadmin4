@@ -15,28 +15,58 @@
         <meta name="dcterms.dateCopyrighted" content="2014 - 2015">
 
         <!-- Base template stylesheets -->
-        {% if config.DEBUG %}<link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.css') }}" />{% else %}<link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}" />{% endif %}
-        {% if config.DEBUG %}<link rel="stylesheet" href="{{ url_for('static', filename='css/alertifyjs/alertify.css') }}" />{% else %}<link rel="stylesheet" href="{{ url_for('static', filename='css/alertifyjs/alertify.min.css') }}" />{% endif %}
-        {% if config.DEBUG %}<link rel="stylesheet" href="{{ url_for('static', filename='css/alertifyjs/themes/bootstrap.css') }}" />{% else %}<link rel="stylesheet" href="{{ url_for('static', filename='css/alertifyjs/themes/bootstrap.min.css') }}" />{% endif %}
-        {% if config.DEBUG %}<link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.min.css') }}">{% else %}<link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.min.css') }}">{% endif %}
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/overrides.css') }}">
-        {% if stylesheets is defined %}
+        <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.css' if config.DEBUG else 'css/bootstrap.min.css')}}"/>
+        <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='css/alertifyjs/alertify.css' if config.DEBUG else 'css/alertifyjs/alertify.min.css') }}" />
+        <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='css/alertifyjs/themes/bootstrap.css' if config.DEBUG else 'css/alertifyjs/themes/bootstrap.min.css') }}" />
+        <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.min.css' if config.DEBUG else 'css/bootstrap-theme.css') }}">
+        <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='css/overrides.css') }}">
+        <link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-datepicker3.css')}}"/>
+
         <!-- View specified stylesheets -->
-        {% for stylesheet in stylesheets %}
-        <link rel="stylesheet" href="{{ stylesheet }}">{% endfor %}
-        {% endif %}
-        
+        {% for stylesheet in current_app.stylesheets %}
+        <link type="text/css" rel="stylesheet" href="{{ stylesheet }}">
+        {% endfor %}
+
         <!-- Base template scripts -->
-        <script src="{{ url_for('static', filename='js/modernizr-2.6.2-respond-1.1.0.min.js') }}"></script>
-        {% if config.DEBUG %}<script src="{{ url_for('static', filename='js/jquery-1.11.2.js') }}">{% else %}<script src="{{ url_for('static', filename='js/jquery-1.11.2.min.js') }}">{% endif %}</script>
-        {% if config.DEBUG %}<script src="{{ url_for('static', filename='js/bootstrap.js') }}">{% else %}<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}">{% endif %}</script>
-        {% if config.DEBUG %}<script src="{{ url_for('static', filename='js/alertifyjs/alertify.js') }}">{% else %}<script src="{{ url_for('static', filename='js/alertifyjs/alertify.min.js') }}">{% endif %}</script>
-        <script src="{{ url_for('static', filename='js/alertifyjs/pgadmin.defaults.js') }}"></script>
-        {% if scripts is defined %}
+        <script type="text/javascript" src="{{ url_for('static', filename='js/require.js' if config.DEBUG else 'js/require.min.js') }}"></script>
+        <script type="text/javascript">
+            require.config({
+                baseUrl: '',
+                shim: {
+                    "backbone": {
+                        "deps": ['underscore', 'jquery'],
+                        "exports": 'Backbone'
+                    },
+                    "bootstrap": {
+                        "deps": ['jquery'],
+                    },
+                    "bootstrap.datepicker": {
+                        "deps": ['jquery', 'bootstrap'],
+                        "exports": 'jQuery.fn.datepicker'
+                    }{% for script in current_app.javascripts %}{% if 'deps' in script or 'exports' in script %},
+                    '{{ script.name }}': {
+                    {% if 'deps' in script %}"deps": [ {% set comma = False %}{% for dep in script['deps'] %} {% if comma %},{% else %}{% set comma = True %}{% endif %} '{{ dep }}'{% endfor %}],{% endif %}
+                        {% if 'exports' in script %}"exports": "{{ script['exports'] }}"{% endif %}
+                    }{% endif %}{% endfor %}
+                },
+                paths: {
+                    pgadmin: "{{ url_for('static', filename='js/pgadmin') }}",
+                    modernizr: "{{ url_for('static', filename='js/modernizr-2.6.2-respond-1.1.0.min') }}",
+                    jquery: "{{ url_for('static', filename='js/' + 'jquery-1.11.2' if config.DEBUG else 'jquery-1.11.2.min') }}",
+                    underscore: "{{ url_for('static', filename='js/' + 'underscore' if config.DEBUG else 'underscore.min') }}",
+                    bootstrap: "{{ url_for('static', filename='js/' + 'bootstrap' if config.DEBUG else 'bootstrap.min') }}",
+                    alertifyjs: "{{ url_for('static', filename='js/alertifyjs/' + 'alertify' if config.DEBUG else 'alertify.min') }}",
+                    'pgadmin.alertifyjs': "{{ url_for('static', filename='js/alertifyjs/pgadmin.defaults') }}",
+                    backbone: "{{ url_for('static', filename='js/' + 'backbone' if config.DEBUG else 'backbone.min') }}",
+                    "bootstrap.datepicker": "{{ url_for('static', filename='js/' + 'bootstrap-datepicker' if config.DEBUG else 'bootstrap-datepicker.min') }}",
+                    backform: "{{ url_for('static', filename='js/' + 'backform') }}",
+                    'pgadmin.backform': "{{ url_for('static', filename='js/' + 'backform.pgadmin') }}"{% for script in current_app.javascripts %},
+                    '{{ script.name }}': "{{ script.path }}"{% endfor %}
+                }
+            });
+        </script>
         <!-- View specified scripts -->
-        {% for script in scripts %}
-        <script src="{{ script }}"></script>{% endfor %}
-        {% endif %}
+
     </head>
     <body>
         <!--[if lt IE 7]>
@@ -44,6 +74,9 @@
         <![endif]-->
 
         {% block body %}{% endblock %}
+        <script>
+            {% block init_script %}{% endblock %}
+        </script>
 
     </body>
 </html>
