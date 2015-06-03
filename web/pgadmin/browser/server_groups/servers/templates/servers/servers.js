@@ -2,8 +2,6 @@ define(
         ['jquery', 'underscore', 'pgadmin', 'pgadmin.browser', 'alertify'],
 function($, _, pgAdmin, pgBrowser, alertify) {
 
-  var module_name = 'pgadmin.node.server';
-
   if (!pgBrowser.Nodes['server']) {
     pgBrowser.Nodes['server'] = new pgBrowser.Node({
       parent_type: 'server-group',
@@ -17,22 +15,22 @@ function($, _, pgAdmin, pgBrowser, alertify) {
 
         this.initialized = true;
 
-        this.addmenus([{
-          type: 'server-group', callback: 'create_obj', priority: 1,
-          applies: ['object', 'context'], category: 'create',
-          label: '{{ _('Server...') }}'
+        pgBrowser.add_menus([{
+          name: 'create_server_on_sg', node: 'server-group', module: this,
+          applies: ['object', 'context'], callback: 'create_obj',
+          category: 'create', priority: 1, label: '{{ _('Server...') }}'
         }, {
-          type: 'server', callback: 'create_obj', priority: 2,
-          applies: ['object', 'context'], category: 'create',
-          label: '{{ _('Server...') }}'
+          name: 'create_server', node: 'server', module: this,
+          applies: ['object', 'context'], callback: 'create_obj',
+          category: 'create', priority: 2, label: '{{ _('Server...') }}'
         },{
-          type: 'server', callback: 'drop_obj', priority: 3,
-          applies: ['object', 'context'], category: 'drop',
-          label: '{{ _('Drop Server...') }}'
+          name: 'drop_server', node: 'server', module: this,
+          applies: ['object', 'context'], callback: 'drop_obj',
+          category: 'drop', priority: 3, label: '{{ _('Drop Server...') }}'
         }, {
-          type: 'server', callback: 'rename_obj', priority: 4,
-          applies: ['object', 'context'], category: 'renmae',
-          label: '{{ _('Rename Server...') }}', extra: undefined
+          name: 'rename_server', node: 'server', module: this,
+          applies: ['object', 'context'], callback: 'rename_obj',
+          category: 'renmae', priority: 4, label: '{{ _('Rename Server...') }}'
         }]);
       },
       callbacks: {

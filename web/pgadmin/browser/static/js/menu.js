@@ -5,10 +5,15 @@ function(_, pgAdmin, $) {
 
   pgAdmin.Browser = pgAdmin.Browser || {};
   pgAdmin.Browser.MenuItem = function(opts) {
-    var defaults = [
-      'label', 'priority', 'module', 'callback', 'data', 'enable', 'category'
-    ];
-    _.extend(this, _.pick(opts, defaults));
+    var menu_opts = [
+      'name', 'label', 'priority', 'module', 'callback', 'data', 'enable', 'category', 'target', 'url'
+    ],
+    defaults = {
+      url: '#',
+      target: '_self',
+      enable: true
+    };
+    _.extend(this, defaults, _.pick(opts, menu_opts));
   };
 
   _.extend(pgAdmin.Browser.MenuItem.prototype, {
@@ -17,14 +22,24 @@ function(_, pgAdmin, $) {
         .addClass('menu-item')
         .append(
           $('<a></a>', {
-            'href':'#',
+            'id': this.name,
+            'href': this.url,
+            'target': this.target,
             'data-toggle': 'pg-menu'
-          }).data('pg-menu', {
-              module: this.module || pgAdmin.Browser,
-              cb: this.callback,
-              data: this.data
-          }).text(this.label).addClass('menu-link')
-          );
+          }).data('pgMenu', {
+            module: this.module || pgAdmin.Browser,
+            cb: this.callback,
+            data: this.data
+          }).text(this.label).addClass('menu-link'));
+    },
+    disabled: function(o) {
+        if (_.isFunction(this.enable)) return !this.enable.apply(this.module, [this.data]);
+        if (_.isBoolean(this.enable)) return !this.enable;
+        if (this.module && _.isBoolean(this.module[this.enable])) return !this.module[this.enable];
+        if (this.module && _.isFunction(this.module[this.enable])) return !this.enable.apply(this.module, [this.data]);
+        if (_.isFunction(o[this.enable])) return !this.enable.apply(o, [this.data]);
+
+        return false;
     }
   });
 
@@ -39,18 +54,21 @@ function(_, pgAdmin, $) {
 
   Menu.DEFAULTS = {}
 
-  Menu.prototype.toggle = function () {
-    var changed = true
-    var $parent = this.$element.closest('[data-toggle="pg-menu"]')
-
-    if (changed) this.$element.toggleClass('active')
-
-    var d = this.$element.data('pg-menu');
-    var cb = d.module['callbacks'] && d.module['callbacks'][d.cb] || d.module[d.cb];
-    if (cb) {
+  Menu.prototype.toggle = function (ev) {
+    var $parent = this.$element.closest('.menu-item');
+    if ($parent.hasClass('disabled')) {
+      ev.preventDefault()
+      return false;
+    }
+    var d = this.$element.data('pgMenu');
+    if (d.cb) {
+      var cb = d.module && d.module['callbacks'] && d.module['callbacks'][d.cb] || d.module && d.module[d.cb];
+      if (cb) {
         cb.apply(d.module, [d.data]);
-    } else {
+        ev.preventDefault()
+      } else {
         pgAdmin.Browser.report_error('Developer Warning: Callback - "' + d.cb + '" not found!');
+      }
     }
   }
 
@@ -58,7 +76,7 @@ function(_, pgAdmin, $) {
   // BUTTON PLUGIN DEFINITION
   // ========================
 
-  function Plugin(option) {
+  function Plugin(option, ev) {
     return this.each(function () {
       var $this   = $(this)
       var data  = $this.data('pg.menu')
@@ -66,8 +84,7 @@ function(_, pgAdmin, $) {
 
       if (!data) $this.data('pg.menu', (data = new Menu(this, options)))
 
-      if (option == 'toggle') data.toggle()
-      else if (option) data.setState(option)
+      data.toggle(ev)
     })
   }
 
@@ -89,12 +106,11 @@ function(_, pgAdmin, $) {
   // =============
 
   $(document)
-    .on('click.pg.menu.data-api', '[data-toggle^="pg-menu"]', function (e) {
-      var $menu = $(e.target)
+    .on('click.pg.menu.data-api', '[data-toggle^="pg-menu"]', function (ev) {
+      var $menu = $(ev.target)
       if (!$menu.hasClass('menu-link'))
         $menu = $menu.closest('.menu-link')
-      Plugin.call($menu, 'toggle')
-      e.preventDefault()
+      Plugin.call($menu, 'toggle', ev)
     })
     .on('focus.pg.menu.data-api blur.pg.menu.data-api', '[data-toggle^="pg-menu"]',
       function (e) {

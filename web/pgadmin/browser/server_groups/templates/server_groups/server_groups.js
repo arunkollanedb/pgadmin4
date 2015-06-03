@@ -14,18 +14,18 @@ function($, _, pgAdmin, Backbone) {
 
         this.initialized = true;
 
-        this.addmenus([{
-          type: 'server-group', callback: 'create_obj',
-          priority: 1, applies: ['object', 'context'], category: 'create',
-          label: '{{ _('Server Group...') }}'
+        pgAdmin.Browser.add_menus([{
+          name: 'create_server_group', node: 'server-group', module: this,
+          applies: ['object', 'context'], callback: 'create_obj',
+          category: 'create', priority: 1, label: '{{ _('Server Group...') }}'
         }, {
-          type: 'server-group', callback: 'drop_obj',
-          priority: 2, applies: ['object', 'context'], category: 'drop',
-          label: '{{ _('Drop Server Group...') }}'
+          name: 'drop_server_group', node: 'server-group', module: this,
+          applies: ['object', 'context'], callback: 'drop_obj',
+          priority: 2, label: '{{ _('Drop Server Group...') }}'
         }, {
-          type: 'server-group', callback: 'rename_obj',
-          priority: 3, applies: ['object', 'context'], category: 'renmae',
-          label: '{{ _('Rename Server Group...') }}'
+          name: 'rename_server_group', node: 'server-group', module: this,
+          applies: ['object', 'context'], callback: 'rename_obj',
+          priority: 3, label: '{{ _('Rename Server Group...') }}'
         }]);
       },
       model: pgAdmin.Browser.Node.Model.extend({

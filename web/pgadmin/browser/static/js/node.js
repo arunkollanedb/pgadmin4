@@ -405,24 +405,6 @@ function($, _, pgAdmin, Menu, Backbone, Backform) {
             /* Show properties */
             properties();
         },
-        addmenus: function(menus) {
-            var that = this;
-            var pgMenu = pgAdmin.Browser.menus;
-            var MenuItem = pgAdmin.Browser.MenuItem;
-
-            _.each(menus, function(m) {
-                _.each(m.applies, function(a) {
-                    pgMenu[a] = pgMenu[a] || {};
-                    var menus = pgMenu[a][m.type] = pgMenu[a][m.type] || [];
-
-                    menus.push(new pgAdmin.Browser.MenuItem({
-                        module: m.module || that, label: m.label,
-                        priority: m.priority, data: m.data,
-                        callback: m.callback, category: m.category
-                        }));
-                });
-            });
-        },
         reference: function(d) {
             return (d._type == this.type ? (d.refid ? '/' + d.refid : '') : ( '/' + d._id + '/'));
         },

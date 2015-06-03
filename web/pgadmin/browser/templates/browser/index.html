@@ -2,18 +2,18 @@
 {% block title %}{{ config.APP_NAME }}{% endblock %}
 {% block init_script %}
 try {
-    require(
-        ['pgadmin', 'pgadmin.browser'],
+  require(
+    ['pgadmin', 'pgadmin.browser'],
     function(pgAdmin, pgBrowser) {
-        pgBrowser.Init();
+      pgBrowser.init();
     },
     function() {
-        /* TODO:: Show proper error dialog */
-        console.log(arguments);
+      /* TODO:: Show proper error dialog */
+      console.log(arguments);
     });
 } catch (err) {
-    /* Show proper error dialog */
-    console.log(err);
+  /* Show proper error dialog */
+  console.log(err);
 }
 {% endblock %}
 {% block body %}
@@ -33,14 +33,15 @@ try {
 
       <ul class="nav navbar-nav">
 
-        <li class="dropdown">
+        <li id="mnu_file" class="dropdown hide">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{ _('File') }} <span class="caret"></span></a>
-          <ul class="dropdown-menu" role="menu">
-            {% for file_item in menu_items.file_items %}
-            <li><a id="{{ file_item.name }}" href="{{ file_item.url }}"{% if file_item.target %} target="{{ file_item.target }}"{% endif %}{% if file_item.onclick %} onclick="{{ file_item.onclick|safe }}"{% endif %}>{{ file_item.label }}</a></li>{% endfor %}
-          </ul>
+          <ul class="dropdown-menu" role="menu"></ul>
         </li>
-         <li class="dropdown">
+        <li id="mnu_edit" class="dropdown hide">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{ _('Edit') }} <span class="caret"></span></a>
+          <ul class="dropdown-menu" role="menu"></ul>
+        </li>
+        <li id="mnu_obj" class="dropdown hide">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{ _('Object') }} <span class="caret"></span></a>
           <ul id="mnu_dropdown_obj" class="dropdown-menu" role="menu">
             <li id="mnu_create_dropdown_obj" class="menu-item dropdown dropdown-submenu">
@@ -53,21 +54,18 @@ try {
             </li>
           </ul>
         </li>
-        {% for key in ('Edit', 'Tools', 'Management', 'Help') %}
-          {% if menu_items['%s_items' % key.lower()] %}
-        <li class="dropdown">
-          <a href="#" class="dropdown-toggle" data-toggle="dropdown"
-            role="button" aria-expanded="false">{{ _(key) }} <span class="caret"></span></a>
-            <ul class="dropdown-menu" role="menu">
-              {% for item in menu_items['%s_items' % key.lower()] %}
-              <!--
-              <li><a id="{{ item.name }}" href="{{ item.url }}"{% if item.target %} target="{{ item.target }}"{% endif %}{% if item.onclick %} onclick="{{ item.onclick|safe }}"{% endif %}>{{ item.label }}</a></li>
-              -->
-              <li><a id="{{ item.name }}" href="{{ item.url }}"{% if item.target %} target="{{ item.target }}"{% endif %}{% if item.onclick %} onclick="{{ item.onclick|safe }}"{% endif %}>{{ item.label }}</a></li>
-              {% endfor %}
-            </ul>
-        </li>{%endif%}
-        {% endfor %}
+        <li id="mnu_management" class="dropdown hide">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{ _('Management') }} <span class="caret"></span></a>
+          <ul class="dropdown-menu" role="menu"></ul>
+        </li>
+        <li id="mnu_tools" class="dropdown hide">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{ _('Tools') }} <span class="caret"></span></a>
+          <ul class="dropdown-menu" role="menu"></ul>
+        </li>
+        <li id="mnu_help" class="dropdown hide">
+          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{ _('Help') }} <span class="caret"></span></a>
+          <ul class="dropdown-menu" role="menu"></ul>
+        </li>
       </ul>
       {% if config.SERVER_MODE %}
       <ul class="nav navbar-nav navbar-right">

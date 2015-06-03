@@ -27,32 +27,6 @@ class ServerGroupModule(BrowserPluginModule):
 
     NODE_TYPE = "server-group"
 
-    def get_own_menuitems(self):
-        return {
-            'standard_items': [
-                ServerGroupMenuItem(action="drop", priority=10, function="drop_server_group"),
-                ServerGroupMenuItem(action="rename", priority=10, function="rename_server_group")
-            ],
-            'create_items': [
-                ServerGroupMenuItem(name="create_server_group",
-                                    label=gettext('Server Group...'),
-                                    priority=10,
-                                    function="create_server_group",
-                                    types=[self.node_type])
-            ],
-            'context_items': [
-                ServerGroupMenuItem(name="delete_server_group",
-                                    label=gettext('Delete server group'),
-                                    priority=10,
-                                    onclick='drop_server_group(item);'),
-                ServerGroupMenuItem(name="rename_server_group",
-                                    label=gettext('Rename server group...'),
-                                    priority=10,
-                                    onclick='rename_server_group(item);')
-            ]
-        }
-
-
     def get_nodes(self, **kwargs):
         """Return a JSON document listing the server groups for the user"""
         groups = ServerGroup.query.filter_by(user_id=current_user.id)

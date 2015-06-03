@@ -3,6 +3,10 @@ define(
   function($, alertify, pgAdmin) {
     pgAdmin = pgAdmin || window.pgAdmin || {};
 
+    /* Return back, this has been called more than once */
+    if (pgAdmin.About)
+        return;
+
     pgAdmin.About = {
       about_show: function() {
         if (!alertify.aboutDialog) {
@@ -33,5 +37,6 @@ define(
             });
       }
     };
+
     return pgAdmin.About;
   });

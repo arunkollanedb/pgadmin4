@@ -27,8 +27,8 @@ class AboutModule(PgAdminModule):
             'help_items': [
                 MenuItem(name='mnu_about',
                          priority=999,
-                         url='#',
-                         onclick='pgAdmin.About.about_show()',
+                         module="pgAdmin.About",
+                         callback='about_show',
                          label=gettext('About %(appname)s', appname=config.APP_NAME))
             ]
         }

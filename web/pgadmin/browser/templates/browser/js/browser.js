@@ -127,11 +127,13 @@ OWNER TO helpdesk;\n';
         modules: [],
         /* Menus */
         menus: {
-            standard: {},
+            context: {},
+            file: {},
+            edit: {},
             object: {},
+            management: {},
             tools: {},
-            help: {},
-            context: {}
+            help: {}
         },
         register_script: function(n, m, p) {
             var scripts = this.scripts;
@@ -152,21 +154,42 @@ OWNER TO helpdesk;\n';
         // Enable/disable menu options
         enable_disable_menus: function(item) {
             /* New object menu mechanism */
-            var obj_mnu = $('#navbar-menu > ul > li > #mnu_dropdown_obj'),
-                create_mnu = $("#mnu_create_obj").empty(),
+            var obj = this, j, e,
+                navbar = $('#navbar-menu > ul').first(),
+                obj_mnu = navbar.find('li#mnu_obj > ul#mnu_dropdown_obj').first(),
+                create_mnu = navbar.find("#mnu_create_obj").empty(),
                 d = this.tree.itemData(item);
             obj_mnu.children("li:not(:first-child)").remove();
             create_mnu.html('<li class="menu-item disabled"><a href="#">{{ _('No object selected') }}</a></li>\n');
 
+            _.each([
+                    {m: 'file', id: '#mnu_file'},
+                    {m: 'edit', id: '#mnu_edit'},
+                    {m: 'management', id: '#mnu_management'},
+                    {m: 'tools', id: '#mnu_tools'},
+                    {m: 'help', id:'#mnu_help'}], function(o) {
+                        j = navbar.children(o.id).children('.dropdown-menu').first();
+                        _.each(obj.menus[o.m],
+                            function(v, k) {
+                                e = j.find('#' + k).closest('.menu-item').removeClass('disabled');
+                                if (v.disabled(obj)) {
+                                    e.addClass('disabled');
+                                }
+                            });
+                    });
+
             if (item && this.menus['object'] && this.menus['object'][d._type]) {
                 var create_items = [];
-                _.each(_.sortBy(this.menus['object'][d._type], function(o) { return o.priority; }), function(m) {
-                    if (m.category && m.category == 'create') {
-                        create_items.push(m.generate());
-                    } else {
-                        obj_mnu.append(m.generate());
-                    }
-                });
+                _.each(_.sortBy(
+                            this.menus['object'][d._type],
+                            function(o) { return o.priority; }),
+                        function(m) {
+                            if (m.category && m.category == 'create') {
+                                create_items.push(m.generate());
+                            } else {
+                                obj_mnu.append(m.generate());
+                            }
+                        });
                 /* Create menus goes seperately */
                 if (create_items.length > 0) {
                     create_mnu.empty();
@@ -184,7 +207,7 @@ OWNER TO helpdesk;\n';
 
             return this.tree.itemData(item)._type;
         },
-        Init: function() {
+        init: function() {
             var obj=this;
 
             // Store the main browser layout
@@ -262,7 +285,7 @@ OWNER TO helpdesk;\n';
                             var o = undefined;
 
                             _.each(menus, function(m) {
-                                if (name == m.module.type + '_' + m.callback) {
+                                if (name == m.name) {
                                     o = m;
                                 }
                             });
@@ -277,25 +300,28 @@ OWNER TO helpdesk;\n';
                             }
                         };
 
-                    _.each(menus, function(m) {
-                        if (m.category == 'create')
-                            createMenu[m.module.type + '_' + m.callback] = { name: m.label, callback: cb };
-                    });
+                    _.each(_.sortBy(
+                                menus, function(m) { return m.priority; }),
+                            function(m) {
+                                if (m.category == 'create')
+                                    createMenu[m.name] = { name: m.label };
+                            });
 
 
                     menu["create"] = { "name": "{{ _('Create') }}" }
                     menu["create"]["items"] = createMenu
 
-
-                    _.each(menus, function(m) {
-                        if (m.category != 'create')
-                            menu[m.module.type + '_' + m.callback] = { name: m.label, callback: cb };
-                    });
+                    _.each(_.sortBy(
+                                menus, function(m) { return m.priority; }),
+                            function(m) {
+                                if (m.category != 'create')
+                                    menu[m.module.type + '_' + m.callback] = { name: m.label };
+                            });
 
                     return {
                         autoHide: true,
                         items: menu,
-                        callback: null
+                        callback: cb
                     };
                 }
             });
@@ -326,9 +352,9 @@ OWNER TO helpdesk;\n';
                                     if (!s.loaded) {
                                         require([s.name], function(m) {
                                             s.loaded = true;
-                                            if (m && m.Init && typeof m.Init == 'function') {
+                                            if (m && m.init && typeof m.init == 'function') {
                                                 try {
-                                                    m.Init();
+                                                    m.init();
                                                 } catch (err) {
                                                     obj.report_error('{{ _('Error Initializing script - ') }}' + s.path, err);
                                                 }
@@ -341,34 +367,110 @@ OWNER TO helpdesk;\n';
                         break;
                 }
             });
-            {% for script in current_app.javascripts %}{% if 'when' in script %}{% if script['when'] is none %}
-            /* Loading {{ script.path }} */
-            require(['{{ script.name }}'], function(m) {}, function() { console.log (arguments); });{% else %}
+            var counter = {total: 0, loaded: 0};
+            {% for script in current_app.javascripts %}{% if 'when' in script %}counter.total += 1; /* Not loading it now */
+            {% if script.when %}counter.loaded += 1; /* Not loading it now */
             /* Registering '{{ script.path }}.js' to be loaded when a node '{{ script.when }}' is loaded */
-            this.register_script('{{ script.when }}', '{{ script.name }}', '{{ script.path }}.js');{% endif %}{% endif %}{% endfor %}
+            this.register_script('{{ script.when }}', '{{ script.name }}', '{{ script.path }}.js');{% else %}
+            /* Loading {{ script.path }} */
+            this.load_module('{{ script.name }}', '{{ script.path }}', counter);{% endif %}{% endif %}{% endfor %}
 
-            // Setup the menus
-            obj.enable_disable_menus();
+            var geneate_menus = function() {
+                    if (counter.total == counter.loaded) {
+                        {% set cnt = 1 %}
+                        obj.add_menus([{% for key in ('File', 'Edit', 'Object' 'Tools', 'Management', 'Help') %}{% for item in current_app.menu_items['%s_items' % key.lower()] %}{% if cnt != 1 %}, {% endif %} {
+                            name: "{{ item.name }}",
+                            {% if item.module %}module: {{ item.module }},
+                            {% endif %}{% if item.url %}url: "{{ item.url }}",
+                            {% endif %}{% if item.target %}target: "{{ item.target }}",
+                            {% endif %}{% if item.callback %}callback: "{{ item.callback }}",
+                            {% endif %}label: '{{ item.label }}', applies: ['{{ key.lower() }}'],
+                            priority: {{ item.priority }},
+                            enable: '{{ item.enable }}'
+                        }{% set cnt = cnt + 1 %}{% endfor %}{% set cnt = cnt + 1 %}{% endfor %}]);
+                        obj.create_menus();
+                    } else {
+                        setTimeout(function() { geneate_menus(); }, 500);
+                    }
+            };
+            geneate_menus();
         },
-        Action: function(action) {
-            var obj = this,
-            item = obj.tree.selected();
-
-            if (item) {
-                var d = obj.tree.itemData(item);
-
-                if (d && obj.Nodes[d._type] &&
-                    _.isObject(obj.Nodes[d._type].callbacks) &&
-                    action in obj.Nodes[d._type].callbacks &&
-                    typeof obj.Nodes[d._type].callbacks[eventName] ==
-                    'function') {
-                    return obj.Nodes[d._type].callbacks[eventName].apply(
-                        obj.Nodes[d._type], [{
-                            data: d, browser: obj, item: item,
-                            eventName: action
-                        }]);
+        load_module: function(name, path, c) {
+            require([name],function(m) {
+                try {
+                    if (m.init && typeof(m.init) == 'function')
+                        m.init();
+                } catch (e) {
                 }
-            }
+                c.loaded += 1;
+            }, function() {
+                /* TODO:: proper error */
+                console.log (arguments);
+            });
+        },
+        add_menus: function(menus) {
+            var pgMenu = this.menus;
+            var MenuItem = pgAdmin.Browser.MenuItem;
+
+            _.each(menus, function(m) {
+                _.each(m.applies, function(a) {
+                    /* We do support menu type only from this list */
+                    if ($.inArray(a, [
+                            'context', 'file', 'edit', 'object',
+                            'management', 'tools', 'help']) >= 0) {
+                        var menus;
+                        pgMenu[a] = pgMenu[a] || {};
+                        if (_.isString(m.node)) {
+                            menus = pgMenu[a][m.node] = pgMenu[a][m.node] || {};
+                        } else {
+                            menus = pgMenu[a];
+                        }
+
+                        if (_.has(menus, m.name)) {
+                            console.log(m.name +
+                                ' has been ignored!\nIt is already exist in the ' +
+                                a +
+                                ' list of menus!');
+                        } else {
+                            menus[m.name] = new MenuItem({
+                                name: m.name, label: m.label, module: m.module,
+                                category: m.category, callback: m.callback,
+                                priority: m.priority, data: m.data, url: m.url,
+                                enable: m.enable == '' ? true : _.isString(m.enable) && m.enable.toLowerCase() == 'false' ? false : m.enable
+                            });
+                        }
+                    } else  {
+                        console && console.log &&
+                            console.log(
+                                "Developer warning: Category '" +
+                                a +
+                                "' is not supported!\nSupported categories are: context, file, edit, object, tools, management, help");
+                    }
+                });
+            });
+        },
+        create_menus: function() {
+            /* Create menus */
+            var navbar = $('#navbar-menu > ul').first();
+            var obj = this;
+
+            _.each([
+                    {menu: 'file', id: '#mnu_file'},
+                    {menu: 'edit', id: '#mnu_edit'},
+                    {menu: 'management', id: '#mnu_management'},
+                    {menu: 'tools', id: '#mnu_tools'},
+                    {menu: 'help', id:'#mnu_help'}], function(o) {
+                        var j = navbar.children(o.id).children('.dropdown-menu').first().empty();
+                        _.each(
+                            _.sortBy(obj.menus[o.menu],
+                                function(v, k) { return v.priority; }),
+                            function(v) {
+                                j.closest('.dropdown').removeClass('hide');
+                                j.append(v.generate());
+                            });
+                    });
+            navbar.children('#mnu_obj').removeClass('hide');
+            this.enable_disable_menus();
         }
     });
 

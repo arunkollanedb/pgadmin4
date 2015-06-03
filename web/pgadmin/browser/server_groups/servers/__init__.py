@@ -49,32 +49,6 @@ class ServerModule(sg.ServerGroupPluginModule):
 
             yield node
 
-    def get_own_menuitems(self):
-        return {
-            'standard_items': [
-                ServerMenuItem(action="drop", priority=50, function='drop_server'),
-                ServerMenuItem(action="rename", priority=50, function='rename_server')
-            ],
-            'create_items': [
-                ServerMenuItem(types=["server-group", "server"],
-                               name="create_server",
-                               label=gettext('Server...'),
-                               priority=50,
-                               function='create_server(item)')
-            ],
-            'context_items': [
-                ServerMenuItem(name='delete_server',
-                               label=gettext('Delete server'),
-                               priority=50,
-                               onclick='drop_server(item)'),
-                ServerMenuItem(name='rename_server',
-                               label=gettext('Rename server...'),
-                               priority=60,
-                               onclick='rename_server(item);')
-            ]
-        }
-
-
     @property
     def jssnippets(self):
         return []
