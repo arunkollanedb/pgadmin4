@@ -73,9 +73,33 @@
     }
   };
 
+  var View = Backform.View = Backbone.View.extend({
+    controls: undefined
+  });
+
+  _.extend(Backform.View.prototype, {
+    close: function() {
+      if (this.controls) {
+        _.each(this.controls, function(c) {
+          c.close();
+          delete c;
+        });
+        this.controls = undefined;
+      }
+
+      /* Give user chance to do his/her part */
+      if (this.onClose && _.isFunction(this.onClose)) {
+        this.onClose();
+      }
+      if (this.$el) this.undelegateEvents();
+      this.unbind();
+      this.remove();
+    }
+  });
+
   // Backform Form view
   // A collection of field models.
-  var Form = Backform.Form = Backbone.View.extend({
+  var Form = Backform.Form = Backform.View.extend({
     fields: undefined,
     errorModel: undefined,
     tagName: "form",
@@ -89,6 +113,14 @@
       this.model.errorModel = options.errorModel || this.model.errorModel || new Backbone.Model();
     },
     render: function() {
+      if (this.controls) {
+        _.each(this.controls, function(c) {
+          c.close();
+          delete c;
+        });
+        this.controls = undefined;
+      }
+      this.controls = [];
       this.$el.empty();
 
       var form = this,
@@ -101,9 +133,19 @@
           model: model
         });
         $form.append(control.render().$el);
+        this.controls.push(control);
       });
 
       return this;
+    },
+    onClose: function() {
+      this.fields.each(function(field) {
+          field.unbind();
+      });
+      this.fields.unbind();
+      this.fields.remove();
+      delete this.fields;
+      this.fields = undefined;
     }
   });
 
@@ -190,7 +232,7 @@
   });
 
   // Base Control class
-  var Control = Backform.Control = Backbone.View.extend({
+  var Control = Backform.Control = Backform.View.extend({
     defaults: {}, // Additional field defaults
     className: function() {
       return Backform.groupClassName;
@@ -310,6 +352,13 @@
         obj = obj[path.shift()];
       }
       return obj[path.shift()] = value;
+    },
+    onClose: function() {
+      this.stopListening(this.model, "change:" + name);
+      if (this.model.errorModel instanceof Backbone.Model) {
+        this.stopListening(this.model.errorModel, "change:" + name);
+      }
+      this.field.unbind();
     }
   });
 

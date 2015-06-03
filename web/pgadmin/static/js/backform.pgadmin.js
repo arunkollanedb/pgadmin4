@@ -60,7 +60,7 @@
 
   // Backform Dialog view (in bootstrap tabbular form)
   // A collection of field models.
-  var Dialog = Backform.Dialog = Backbone.View.extend({
+  var Dialog = Backform.Dialog = Backform.View.extend({
     /* Array of objects having attributes [label, fields] */
     schema: undefined,
     errorModel: undefined,
@@ -98,6 +98,14 @@
         m = this.model,
         obj = this;
 
+      if (this.controls && _.isArray(this.controls)) {
+          _.each(this.controls, function(c) {
+              c.close();
+              delete c;
+          });
+      }
+      this.controls = [];
+
       obj.$el
           .empty()
           .attr('role', 'tabpanel')
@@ -120,6 +128,7 @@
             model: m
           });
           el.append(cntr.render().$el);
+          this.controls.push(cntr);
         });
       });
 
@@ -134,6 +143,18 @@
       }
 
       return this;
+    },
+    onClose: function() {
+
+      _.each(this.schema, function(o) {
+          o.fields.each(function(f) {
+              f.unbind();
+          });
+          o.fields.unbind();
+          o.fields.remove();
+          delete o.fields;
+          o.fields = undefined;
+      });
     }
   });
 
@@ -152,6 +173,15 @@
       var m = this.model,
         obj = this;
 
+      if (this.controls && _.isArray(this.controls)) {
+        _.each(this.controls, function(c) {
+          c.close();
+          delete c;
+        });
+      }
+      this.controls = [];
+      var c = this.controls;
+
       obj.$el.empty();
 
       _.each(this.schema, function(o) {
@@ -165,6 +195,7 @@
             model: m
           });
           el.append(cntr.render().$el);
+          c.push(cntr);
         });
       });
 

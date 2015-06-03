@@ -173,6 +173,7 @@ function($, _, pgAdmin, Menu, Backbone, Backform) {
                     /* START */
                     var that = this,
                         j = $('#obj_props'),
+                        view = j.data('obj-view'),
                         content = $('<div></div>').addClass('pg-prop-content'),
                         createButtons = function(buttons) {
                             if (buttons && _.isArray(buttons) && buttons.length > 0) {
@@ -194,14 +195,17 @@ function($, _, pgAdmin, Menu, Backbone, Backform) {
                             return null;
                         },
                         createFunc = function() {
-                            j.empty();
-                            if (that.view) {
-                                j.empty();
-                                delete that.view;
-                                that.view = null;
+                            if (view) {
+                                view.close();
+                                delete view;
+                                view = null;
+                                j.data('obj-view', null);
                             }
+                            j.empty();
                             that.getView('create', content, d, 'fieldset');
                             if (that.view) {
+                                view = that.view;
+                                j.data('obj-view', view);
                                 createButtons([{
                                     label: 'Save', type: 'save',
                                     extraClasses: ['btn-primary'],
@@ -296,6 +300,7 @@ function($, _, pgAdmin, Menu, Backbone, Backform) {
         showProperties: function(tree, item, node, el) {
             var that = this,
                 j = $(el),
+                view = j.data('obj-view'),
                 content = $('<div></div>').addClass('pg-prop-content'),
                 createButtons = function(buttons) {
                     if (buttons && _.isArray(buttons) && buttons.length > 0) {
@@ -317,14 +322,17 @@ function($, _, pgAdmin, Menu, Backbone, Backform) {
                     return null;
                 },
                 properties = function() {
-                    j.empty();
-                    if (that.view) {
-                        j.empty();
-                        delete that.view;
-                        that.view = null;
+                    if (view) {
+                        view.close();
+                        delete view;
+                        view = null;
+                        j.data('obj-view', null);
                     }
+                    j.empty();
                     that.getView('properties', content, node, 'fieldset');
                     if (that.view) {
+                        view = that.view;
+                        j.data('obj-view', view);
                         createButtons([{
                             label: 'Edit', type: 'edit',
                             extraClasses: ['btn-primary'],
@@ -338,11 +346,18 @@ function($, _, pgAdmin, Menu, Backbone, Backform) {
                     j.append(content);
                 },
                 editFunc = function() {
-                    delete that.view;
-                    that.view = null;
+                    if (view) {
+                        view.close();
+                        delete view;
+                        view = null;
+                        j.data('obj-view', null);
+                    }
+
                     j.empty();
                     that.getView('edit', content, node, 'fieldset');
                     if (that.view) {
+                        view = that.view;
+                        j.data('obj-view', view);
                         createButtons([{
                             label: 'Save', type: 'save',
                             extraClasses: ['btn-primary'],
