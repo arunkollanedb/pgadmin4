@@ -3,7 +3,7 @@ define(
 function($, _, pgAdmin, pgBrowser, alertify) {
 
   if (!pgBrowser.Nodes['server']) {
-    pgBrowser.Nodes['server'] = new pgBrowser.Node({
+    pgAdmin.Browser.Nodes['server'] = pgAdmin.Browser.Node.extend({
       parent_type: 'server-group',
       type: 'server',
       label: '{{ _('Server...') }}',

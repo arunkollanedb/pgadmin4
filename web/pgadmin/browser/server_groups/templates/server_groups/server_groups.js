@@ -3,7 +3,7 @@ define(
 function($, _, pgAdmin, Backbone) {
 
   if (!pgAdmin.Browser.Nodes['server-group']) {
-    pgAdmin.Browser.Nodes['server-group'] = new pgAdmin.Browser.Node({
+    pgAdmin.Browser.Nodes['server-group'] = pgAdmin.Browser.Node.extend({
       parent_type: null,
       type: 'server-group',
       label: '{{ _('Server Group') }}',
