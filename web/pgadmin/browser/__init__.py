@@ -105,17 +105,20 @@ class BrowserModule(PgAdminModule):
             'exports': '',
             'preloaded': True
             })
-        scripts.append({
-            'name': 'pgadmin.browser', 'preloaded': True,
-            'path': url_for('browser.index') + 'browser'})
-        for name, start, end in [
-                ['pgadmin.browser.menu', 'browser.static', 'js/menu'],
-                ['pgadmin.browser.error', 'browser.static', 'js/error'],
-                ['pgadmin.browser.node', 'browser.static', 'js/node'],
-                ['pgadmin.browser.panel', 'browser.static', 'js/panel'],
-                ['pgadmin.browser.frame', 'browser.static', 'js/frame']]:
+
+        for name, script in [
+                ['pgadmin.browser',       'js/browser'],
+                ['pgadmin.browser.error', 'js/error'],
+                ['pgadmin.browser.node',  'js/node']]:
+            scripts.append({ 'name': name,
+                'path': url_for('browser.index') + script, 'preloaded': True })
+
+        for name, end in [
+                ['pgadmin.browser.menu', 'js/menu'],
+                ['pgadmin.browser.panel', 'js/panel'],
+                ['pgadmin.browser.frame', 'js/frame']]:
             scripts.append({
-                'name': name, 'path': url_for(start, filename=end),
+                'name': name, 'path': url_for('browser.static', filename=end),
                 'preloaded': True})
 
         for module in self.submodules:
@@ -244,7 +247,7 @@ def index():
     return render_template(MODULE_NAME + "/index.html",
                            username=current_user.email)
 
-@blueprint.route("/browser.js")
+@blueprint.route("/js/browser.js")
 @login_required
 def browser_js():
     layout = get_setting('Browser/Layout', default='')
@@ -256,6 +259,20 @@ def browser_js():
                 'browser/js/browser.js',
                 layout=layout,
                 jssnippets=snippets),
+            200, {'Content-Type': 'application/x-javascript'})
+
+@blueprint.route("/js/error.js")
+@login_required
+def error_js():
+    return make_response(
+            render_template('browser/js/error.js'),
+            200, {'Content-Type': 'application/x-javascript'})
+
+@blueprint.route("/js/node.js")
+@login_required
+def node_js():
+    return make_response(
+            render_template('browser/js/node.js'),
             200, {'Content-Type': 'application/x-javascript'})
 
 

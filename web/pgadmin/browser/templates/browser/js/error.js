@@ -10,7 +10,7 @@ function(_, alertify, pgAdmin) {
                    <div class="panel-heading" role="tab" id="headingOne">\
                    <h4 class="panel-title">\
                    <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">\
-                   Error message\
+                   {{ _('Error message') }}\
             </a>\
                 </h4>\
                 </div>\
@@ -24,11 +24,11 @@ function(_, alertify, pgAdmin) {
                         <div class="panel-heading" role="tab" id="headingTwo">\
                         <h4 class="panel-title">\
                         <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">\
-                        Additional info</a>\
+                        {{ _('Additional info') }}</a>\
                     </h4>\
                     </div>\
                     <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">\
-                    <div class="panel-body" style="overflow: scroll;">' + info + '</div>\
+                    <div class="panel-body" style="overflow: scroll;">' + unescape(info) + '</div>\
                     </div>\
                     </div>\
                     </div>'
@@ -36,7 +36,7 @@ function(_, alertify, pgAdmin) {
 
             text += '</div>'
             alertify.alert(
-                'An error has occurred',
+                "{{ _('An error has occurred') }}",
                 text
             )
         },

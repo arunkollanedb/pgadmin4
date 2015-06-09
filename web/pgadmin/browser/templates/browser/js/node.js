@@ -128,7 +128,7 @@ function($, _, pgAdmin, Menu, Backbone, Backform, Alertify) {
                             type in controlType) {
                             // Each field is kept in specified group, or in
                             // 'General' category.
-                            var group = f.group || "General";
+                            var group = f.group || "{{ _('General') }}";
 
                             // Generate the empty group list (if not exists)
                             if (!groups[group]) {
@@ -140,9 +140,11 @@ function($, _, pgAdmin, Menu, Backbone, Backform, Alertify) {
                             groups[group].push({
                                 name: f.id, label: f.label,
                                 control: controlType[type][f.type],
+                                // Do we need to show this control in this mode?
                                 show: f.show && newModel[f.show] &&
                                     typeof newModel[f.show] == "function" ?
                                     newModel[f.show] : undefined,
+                                // This can be disabled in some cases (if not hidden)
                                 disable: f.disable && newModel[f.disable] &&
                                     typeof newModel[f.disable] == "function" ?
                                     newModel[f.disable] : undefined,
@@ -328,7 +330,7 @@ function($, _, pgAdmin, Menu, Backbone, Backform, Alertify) {
 
                                 // Create the buttons now.
                                 createButtons([{
-                                    label: 'Save', type: 'save',
+                                    label: '{{ _('Save') }}', type: 'save',
                                     extraClasses: ['btn-primary'],
                                     register: function(btn) {
                                         // Create a new node on clicking this
@@ -342,11 +344,11 @@ function($, _, pgAdmin, Menu, Backbone, Backform, Alertify) {
                                                 m.save({} ,{
                                                     success: function(model, response) {
                                                         /* TODO:: Add this node to the tree */
-                                                        alert('Show this object in the browser tree and select it!');
+                                                        alert('{{ _('Show this object in the browser tree and select it!') }} ');
                                                     },
                                                     error: function() {
                                                         /* TODO:: Alert for the user on error */
-                                                        console.log('ERROR:');
+                                                        console.log('{{ _('ERROR:') }}');
                                                         console.log(arguments);
                                                     }
                                                     });
@@ -354,16 +356,16 @@ function($, _, pgAdmin, Menu, Backbone, Backform, Alertify) {
                                         });
                                     }
                                 },{
-                                    label: 'Cancel', type: 'cancel',
+                                    label: '{{ _('Cancel') }}', type: 'cancel',
                                     extraClasses: ['btn-danger'],
                                     register: function(btn) {
                                         btn.click(function() {
                                             /* TODO:: Show properties of the current selected object */
-                                            alert('show properties of selected node');
+                                            alert('{{ _('show properties of selected node') }}');
                                         });
                                     }
                                 },{
-                                    label: 'Reset', type: 'reset',
+                                    label: '{{ _('Reset') }}', type: 'reset',
                                     extraClasses: ['btn-warning'],
                                     register: function(btn) {
                                         btn.click(function() {
@@ -500,7 +502,7 @@ function($, _, pgAdmin, Menu, Backbone, Backform, Alertify) {
                         j.data('obj-view', view);
                         // Create proper buttons
                         createButtons([{
-                            label: 'Edit', type: 'edit',
+                            label: '{{ _('Edit') }}', type: 'edit',
                             extraClasses: ['btn-primary'],
                             register: function(btn) {
                                 btn.click(function() {
@@ -532,7 +534,7 @@ function($, _, pgAdmin, Menu, Backbone, Backform, Alertify) {
                         j.data('obj-view', view);
                         // Create proper buttons
                         createButtons([{
-                            label: 'Save', type: 'save',
+                            label: '{{ _('Save') }}', type: 'save',
                             extraClasses: ['btn-primary'],
                             register: function(btn) {
                                 // Save the changes
@@ -560,7 +562,7 @@ function($, _, pgAdmin, Menu, Backbone, Backform, Alertify) {
                                 });
                             }
                         },{
-                            label: 'Cancel', type: 'cancel',
+                            label: '{{ _('Cancel') }}', type: 'cancel',
                             extraClasses: ['btn-danger'],
                             register: function(btn) {
                                 btn.click(function() {
@@ -568,7 +570,7 @@ function($, _, pgAdmin, Menu, Backbone, Backform, Alertify) {
                                 });
                             }
                         },{
-                            label: 'Reset', type: 'reset',
+                            label: '{{ _('Reset') }}', type: 'reset',
                             extraClasses: ['btn-warning'],
                             register: function(btn) {
                                 btn.click(function() {
@@ -622,7 +624,7 @@ function($, _, pgAdmin, Menu, Backbone, Backform, Alertify) {
             });
         },
         // Base class for Node Model
-        Model: Backbone.Model.extend({})
+        Model: Backbone.Model
     });
 
     return pgAdmin.Browser.Node;
