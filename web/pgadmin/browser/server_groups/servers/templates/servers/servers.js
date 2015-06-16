@@ -20,9 +20,17 @@ function($, _, pgAdmin, pgBrowser, alertify) {
           applies: ['object', 'context'], callback: 'create_obj',
           category: 'create', priority: 1, label: '{{ _('Server...') }}'
         }, {
+          name: 'create_server_on_sg_dlg', node: 'server-group', module: this,
+          applies: ['object', 'context'], callback: 'create_obj_dlg',
+          category: 'create', priority: 2, label: '{{ _('Server (Dialog)...') }}'
+        },{
           name: 'create_server', node: 'server', module: this,
           applies: ['object', 'context'], callback: 'create_obj',
-          category: 'create', priority: 2, label: '{{ _('Server...') }}'
+          category: 'create', priority: 3, label: '{{ _('Server...') }}'
+        }, {
+          name: 'create_server_dlg', node: 'server', module: this,
+          applies: ['object', 'context'], callback: 'create_obj_dlg',
+          category: 'create', priority: 4, label: '{{ _('Server (Dialog)...') }}'
         },{
           name: 'drop_server', node: 'server', module: this,
           applies: ['object', 'context'], callback: 'delete_obj',

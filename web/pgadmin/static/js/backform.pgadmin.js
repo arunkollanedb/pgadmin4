@@ -36,7 +36,7 @@
     controlsClassName: "col-sm-8 pgadmin-controls",
     groupClassName: "pgadmin-control-group form-group col-sm-12 col-lg-12 col-md-12 col-xs-12",
     setGroupClassName: "set-group col-sm-12 col-md-12 col-lg-12 col-xs-12",
-    tabClassName: "backform-tab",
+    tabClassName: "backform-tab  col-sm-12 col-md-12 col-lg-12 col-xs-12",
     setGroupContentClassName: "fieldset-content col-sm-12 col-md-12 col-lg-12 col-xs-12"
     });
 
@@ -66,7 +66,7 @@
     errorModel: undefined,
     tagName: "form",
     className: function() {
-      return Backform.formClassName;
+      return 'col-sm-12 col-md-12 col-lg-12 col-xs-12';
     },
     initialize: function(opts) {
       var s = opts.schema;
@@ -88,7 +88,7 @@
         '  id="<%=hId%>" aria-controls="<%=cId%>">',
         '<%=label%></a></li>'].join(" ")),
       'panel': _.template(
-        '<div role="tabpanel" class="tab-pane fade" id="<%=cId%>" aria-labelledby="<%=hId%>"></div>'
+        '<div role="tabpanel" class="tab-pane col-sm-12 col-md-12 col-lg-12 col-xs-12 fade" id="<%=cId%>" aria-labelledby="<%=hId%>"></div>'
       )},
     render: function() {
       var c = 
@@ -98,13 +98,13 @@
         m = this.model,
         obj = this;
 
-      if (this.controls && _.isArray(this.controls)) {
-          _.each(this.controls, function(c) {
+      if (obj.controls && _.isArray(obj.controls)) {
+          _.each(obj.controls, function(c) {
               c.close();
               delete c;
           });
       }
-      this.controls = [];
+      obj.controls = [];
 
       obj.$el
           .empty()
@@ -113,10 +113,10 @@
 
       var tabHead = $('<ul class="nav nav-tabs" role="tablist"></ul>')
         .appendTo(obj.$el);
-      var tabContent = $('<ul class="tab-content"></ul>')
+      var tabContent = $('<ul class="tab-content col-sm-12 col-md-12 col-lg-12 col-xs-12"></ul>')
         .appendTo(obj.$el);
 
-      _.each(this.schema, function(o) {
+      _.each(obj.schema, function(o) {
         var el = $((obj.template['panel'])(o))
               .appendTo(tabContent)
               .removeClass('collapse').addClass('collapse'),
@@ -128,7 +128,7 @@
             model: m
           });
           el.append(cntr.render().$el);
-          this.controls.push(cntr);
+          obj.controls.push(cntr);
         });
       });
 

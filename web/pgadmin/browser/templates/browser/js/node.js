@@ -1,7 +1,7 @@
 define(
         ['jquery', 'underscore', 'pgadmin', 'pgadmin.browser.menu',
-         'backbone', 'backform', 'pgadmin.backform', 'alertify'],
-function($, _, pgAdmin, Menu, Backbone, Backform, Alertify) {
+         'backbone', 'alertify', 'backform', 'pgadmin.backform'],
+function($, _, pgAdmin, Menu, Backbone, Alertify, Backform) {
 
     var pgBrowser = pgAdmin.Browser = pgAdmin.Browser || {};
 
@@ -89,7 +89,7 @@ function($, _, pgAdmin, Menu, Backbone, Backform, Alertify) {
         //
         // Used to generate view for the particular node properties, edit,
         // creation.
-        getView: function(type, el, node, formType) {
+        getView: function(type, el, node, formType, callback) {
 
             if (!this.type || this.type == '' || !type in controlType)
                 // We have no information, how to generate view for this type.
@@ -191,6 +191,9 @@ function($, _, pgAdmin, Menu, Backbone, Backform, Alertify) {
                                     // We got the latest attributes of the
                                     // object. Render the view now.
                                     view.render();
+                                    if (typeof(callback) != "undefined") {
+                                        callback(view);
+                                    }
                                 }
                             })
                             .error(function() {
@@ -199,6 +202,9 @@ function($, _, pgAdmin, Menu, Backbone, Backform, Alertify) {
                     } else {
                         // Yay - render the view now!
                         view.render();
+                        if (typeof(callback) != "undefined") {
+                            callback(view);
+                        }
                     }
                 }
 
@@ -235,7 +241,7 @@ function($, _, pgAdmin, Menu, Backbone, Backform, Alertify) {
                         i = t.parent(i);
                         pd = t.itemData(i);
 
-                        if (d.parent_type == pd._type) {
+                        if (this.parent_type == pd._type) {
                             // Assign the data, this is my actual parent.
                             d = pd;
                             break;
@@ -384,7 +390,87 @@ function($, _, pgAdmin, Menu, Backbone, Backform, Alertify) {
                 }
             },
             // Create the node in the alertify dialog
-            create_obj_dlg: function() {
+            create_obj_dlg: function(item) {
+                var t = pgBrowser.tree,
+                    i = item || t.selected(),
+                    d = i && i.length == 1 ? t.itemData(i) : undefined;
+
+                // If we've parent, we will get the information of it for
+                // proper object manipulation.
+                //
+                // You know - we're working with RDBMS, relation is everything
+                // for us.
+                if (this.parent_type && this.parent_type != d._type) {
+                    // In browser tree, I can be under any node, But - that
+                    // does not mean, it is my parent.
+                    //
+                    // We have some group nodes too.
+                    //
+                    // i.e.
+                    // Tables, Views, etc. nodes under Schema node
+                    //
+                    // And, actual parent of a table is schema, not Tables.
+                    while (i && t.hasParent(i)) {
+                        i = t.parent(i);
+                        pd = t.itemData(i);
+
+                        if (this.parent_type == pd._type) {
+                            // Assign the data, this is my actual parent.
+                            d = pd;
+                            break;
+                        }
+                    }
+                }
+
+                // Seriously - I really don't have parent data present?
+                //
+                // The only node - which I know - who does not have parent
+                // node, is the Server Group (and, comes directly under root
+                // node - which has no data.)
+                if (!d || (d._type != this.parent_type && this.parent_type != null)) {
+                    // It should never come here.
+                    // If it is here, that means - we do have some bug in code.
+                    return;
+                }
+
+                if (!d)
+                    return;
+
+                var that = this,
+                    content = $('<div></div>').addClass('pg-prop-content'),
+                    cb = function(v) {
+                        // Create the dialog
+                        Alertify.dlgNode || Alertify.dialog('dlgNode',
+                            function factory() {
+                                return {
+                                    main: function(title, message, data) {
+                                        this.set('title', title);
+                                        this.message = message;
+                                    },
+                                    setup: function() {
+                                        return {
+                                            buttons:[
+                                                { text: "{{ _('OK') }}", key: 13, className: "btn btn-primary"},
+                                                { text: "{{ _('Cancel') }}", key: 27, className: "btn btn-danger"}],
+                                            options: { modal: 0, title: this.title, resizeable: 0 }
+                                        };
+                                    },
+                                    prepare: function() {
+                                        this.setContent(this.message);
+                                    },
+                                    callback: function(ev) {
+                                        console.log(ev);
+                                    }
+                                };
+                            }, true);
+                        dlg = Alertify.dlgNode('{{ _("Create") }} ' + that.label, content[0]);
+
+                        // TODO:: Fetch height, width for each dialog
+                        // content is not loaded in the document, hence - it does not
+                        // give reliable values for width, height
+                        dlg.resizeTo(350, 550);
+                    },
+                    view = that.getView('create', content, d, 'tab', cb);
             },
             // Delete the selected object
             delete_obj: function() {

@@ -19,6 +19,11 @@ function($, _, pgAdmin, Backbone) {
           applies: ['object', 'context'], callback: 'create_obj',
           category: 'create', priority: 1, label: '{{ _('Server Group...') }}'
         }, {
+          name: 'create_server_group_dlg', node: 'server-group', module: this,
+          applies: ['object', 'context'], callback: 'create_obj_dlg',
+          category: 'create', priority: 2, label: '{{ _('Server Group (Dialog)...') }}'
+        }, {
+        }, {
           name: 'drop_server_group', node: 'server-group', module: this,
           applies: ['object', 'context'], callback: 'delete_obj',
           priority: 2, label: '{{ _('Drop Server Group...') }}'
