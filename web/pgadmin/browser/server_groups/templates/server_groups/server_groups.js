@@ -20,7 +20,7 @@ function($, _, pgAdmin, Backbone) {
           category: 'create', priority: 1, label: '{{ _('Server Group...') }}'
         }, {
           name: 'drop_server_group', node: 'server-group', module: this,
-          applies: ['object', 'context'], callback: 'drop_obj',
+          applies: ['object', 'context'], callback: 'delete_obj',
           priority: 2, label: '{{ _('Drop Server Group...') }}'
         }, {
           name: 'rename_server_group', node: 'server-group', module: this,

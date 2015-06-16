@@ -25,7 +25,7 @@ function($, _, pgAdmin, pgBrowser, alertify) {
           category: 'create', priority: 2, label: '{{ _('Server...') }}'
         },{
           name: 'drop_server', node: 'server', module: this,
-          applies: ['object', 'context'], callback: 'drop_obj',
+          applies: ['object', 'context'], callback: 'delete_obj',
           category: 'drop', priority: 3, label: '{{ _('Drop Server...') }}'
         }, {
           name: 'rename_server', node: 'server', module: this,
