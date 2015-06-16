@@ -11,8 +11,7 @@
 from abc import ABCMeta, abstractmethod
 import traceback
 import json
-from flask import Blueprint, Response, current_app, request, render_template, \
-        make_response, url_for
+from flask import request, render_template, make_response
 from flask.ext.babel import gettext
 from flask.ext.security import current_user, login_required
 from pgadmin import current_blueprint
@@ -20,14 +19,13 @@ from pgadmin.utils.ajax import make_json_response, make_response as ajax_respons
 from pgadmin.browser import BrowserPluginModule
 from pgadmin.utils.menu import MenuItem
 from pgadmin.settings.settings_model import db, ServerGroup
-import config
 
 
 class ServerGroupModule(BrowserPluginModule):
 
     NODE_TYPE = "server-group"
 
-    def get_nodes(self, **kwargs):
+    def get_nodes(self, *arg, **kwargs):
         """Return a JSON document listing the server groups for the user"""
         groups = ServerGroup.query.filter_by(user_id=current_user.id)
         for group in groups:
@@ -68,7 +66,7 @@ class ServerGroupPluginModule(BrowserPluginModule):
 
 
     @abstractmethod
-    def get_nodes(self, servergroup):
+    def get_nodes(self, *arg, **kwargs):
         pass
 
 
@@ -84,7 +82,7 @@ blueprint = ServerGroupModule( __name__, static_url_path='')
 def module():
     return make_response(
         render_template("server_groups/server_groups.js"),
-        200, {'Content-Type': 'application/x-javascript'});
+        200, {'Content-Type': 'application/x-javascript'})
 
 
 # Initialise the module

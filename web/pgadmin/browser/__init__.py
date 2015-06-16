@@ -40,7 +40,7 @@ class BrowserModule(PgAdminModule):
 
 
     def get_own_javascripts(self):
-        scripts = []
+        scripts = list()
         scripts.append({
             'name': 'alertify',
             'path': url_for('static', filename='js/alertifyjs/alertify' if current_app.debug \

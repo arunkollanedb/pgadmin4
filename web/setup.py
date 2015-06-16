@@ -28,7 +28,7 @@ db.init_app(app)
 
 def do_setup():
     """Create a new settings database from scratch"""
-    if config.SERVER_MODE == False:
+    if config.SERVER_MODE is False:
         print "NOTE: Configuring authentication for DESKTOP mode."
         email = config.DESKTOP_USER
         p1 = ''.join([random.choice(string.ascii_letters + string.digits) for n in xrange(32)])

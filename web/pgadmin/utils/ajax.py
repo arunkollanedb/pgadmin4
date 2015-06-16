@@ -12,10 +12,10 @@
 from flask import Response
 import json
 
-def make_json_response(success=1, errormsg='', info='', result={}, data={}, status=200):
+def make_json_response(success=1, errormsg='', info='', result=None, data=None, status=200):
     """Create a HTML response document describing the results of a request and
     containing the data."""
-    doc = { }
+    doc = dict()
     doc['success'] = success
     doc['errormsg'] = errormsg
     doc['info'] = info
@@ -26,7 +26,7 @@ def make_json_response(success=1, errormsg='', info='', result={}, data={}, stat
                         status=status,
                         mimetype="text/json")
 
-def make_response(response={}, status=200):
+def make_response(response=None, status=200):
     """Create a JSON response handled by the backbone models."""
     return Response(response=json.dumps(response),
                         status=status,

@@ -20,8 +20,8 @@ import sys
 
 import config
 
-class AboutModule(PgAdminModule):
 
+class AboutModule(PgAdminModule):
     def get_own_menuitems(self):
         return {
             'help_items': [
@@ -29,16 +29,17 @@ class AboutModule(PgAdminModule):
                          priority=999,
                          module="pgAdmin.About",
                          callback='about_show',
-                         label=gettext('About %(appname)s', appname=config.APP_NAME))
+                         label=gettext('About %(appname)s',
+                                       appname=config.APP_NAME))
             ]
         }
 
     def get_own_javascripts(self):
         return [{
-            'name':'pgadmin.about',
+            'name': 'pgadmin.about',
             'path': url_for('about.index') + 'about',
             'when': None
-            }]
+        }]
 
 
 blueprint = AboutModule(MODULE_NAME, __name__,
@@ -51,10 +52,10 @@ blueprint = AboutModule(MODULE_NAME, __name__,
 @login_required
 def index():
     """Render the about box."""
-    info = { }
+    info = {}
     info['python_version'] = sys.version
     info['flask_version'] = __version__
-    if config.SERVER_MODE == True:
+    if config.SERVER_MODE is True:
         info['app_mode'] = gettext('Server')
     else:
         info['app_mode'] = gettext('Desktop')
