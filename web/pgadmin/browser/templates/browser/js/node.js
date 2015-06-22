@@ -1,6 +1,6 @@
 define(
         ['jquery', 'underscore', 'pgadmin', 'pgadmin.browser.menu',
-         'backbone', 'alertify', 'backform', 'pgadmin.backform'],
+         'backbone', 'alertify', 'backform', 'pgadmin.backform', 'wcdocker'],
 function($, _, pgAdmin, Menu, Backbone, Alertify, Backform) {
 
     var pgBrowser = pgAdmin.Browser = pgAdmin.Browser || {};
@@ -37,6 +37,9 @@ function($, _, pgAdmin, Menu, Backbone, Alertify, Backform) {
 
         // Registering the node by calling child.Init(...) function
         child.Init.apply(child);
+
+        // Initialize the parent
+        this.Init.apply(child);
 
         return child;
     };
@@ -78,12 +81,27 @@ function($, _, pgAdmin, Menu, Backbone, Alertify, Backform) {
         type: undefined,
         // Label
         label: '',
+        title: function(d) {
+            return d.label;
+        },
         ///////
         // Initialization function
         // Generally - used to register the menus for this type of node.
         //
         // Also, look at pgAdmin.Browser.add_menus(...) function.
-        Init: function() { /* Override for initialization purpose */ },
+        //
+        // NOTE: Override this for each node for initialization purpose
+        Init: function() {
+            if (this.node_initialized)
+                return;
+            this.node_initialized = true;
+
+            pgAdmin.Browser.add_menus([{
+                name: 'show_node_properties', node: this.type, module: this,
+                applies: ['object', 'context'], callback: 'show_obj_properties',
+                priority: 3, label: '{{ _('Properties...') }}'
+            }]);
+        },
         ///////
         // Generate a Backform view using the node's model type
         //
@@ -267,12 +285,12 @@ function($, _, pgAdmin, Menu, Backbone, Alertify, Backform) {
                     pgBrowser.panels['properties'] &&
                     pgBrowser.panels['properties'].panel) {
 
-                    var p = pgBrowser.panels['properties'].panel;
                     // Make sure the properties dialog is visible
                     p.focus();
 
                     var that = this,
-                        j = $('#obj_props'),
+                        j = pgBrowser.panels['properties'].panel
+                            .$container.find('.obj_properties').first(),
                         // In order to release the memory allocated to the view, we need
                         // to keep the view object in this panel.
                         view = j.data('obj-view'),
@@ -472,6 +490,40 @@ function($, _, pgAdmin, Menu, Backbone, Alertify, Backform) {
                     },
                     view = that.getView('create', content, d, 'tab', cb);
             },
+            show_obj_properties: function() {
+                var t = pgBrowser.tree,
+                    i = t.selected(),
+                    d = i && i.length == 1 ? t.itemData(i) : undefined
+                    w = window.wcDocker,
+                    p = pgBrowser.Node.Panel,
+                    o = this;
+
+                if (!p) {
+                    p = new pgAdmin.Browser.Panel({
+                        name: 'node_props',
+                        title: '',
+                        showTitle: true,
+                        isClosable: true,
+                        isPrivate: false,
+                        content: '<div class="obj_properties">No object selected!</div>'
+                    });
+                    p.load(pgBrowser.docker);
+                    pgBrowser.Node.Panel = p;
+                }
+                if (pgBrowser.Node.panels && pgBrowser.Node.panels[d.id] &&
+                        pgBrowser.Node.panels[d.id].$container) {
+                    p = pgBrowser.Node.panels[d.id];
+                } else {
+                    p = pgBrowser.docker.addPanel('node_props', w.DOCK_STACKED,
+                            pgBrowser.panels['properties'].panel);
+                    p.title(o.title(d));
+                    pgBrowser.Node.panels = pgBrowser.Node.panels || {};
+                    pgBrowser.Node.panels[d.id] = p;
+                    o.showProperties(t, i, d,
+                        p.$container.find('.obj_properties').first());
+                }
+                p.focus();
+            },
             // Delete the selected object
             delete_obj: function() {
                 console.log(arguments);
@@ -499,7 +551,9 @@ function($, _, pgAdmin, Menu, Backbone, Alertify, Backform) {
                             o.browser.panels['properties'].panel.isVisible()) {
                         // Show object properties (only when the 'properties' tab
                         // is active).
-                        this.showProperties(o.browser.tree, o.item, o.data, '#obj_props');
+                        this.showProperties(o.browser.tree, o.item, o.data,
+                                pgBrowser.panels['properties'].panel
+                                .$container.find('.obj_properties').first());
                     } else if ('sql' in o.browser.panels &&
                             o.browser.panels['sql'] &&
                             o.browser.panels['sql'].panel &&
@@ -530,9 +584,8 @@ function($, _, pgAdmin, Menu, Backbone, Alertify, Backform) {
         },
         // A hook (not a callback) to show object properties in given HTML
         // element.
-        showProperties: function(tree, item, node, el) {
+        showProperties: function(tree, item, node, j) {
             var that = this,
-                j = $(el),
                 view = j.data('obj-view'),
                 content = $('<div></div>').addClass('pg-prop-content'),
                 // Template function to create the buttons-set.

@@ -62,7 +62,7 @@ OWNER TO helpdesk;\n';
                 name: 'browser',
                 title: '{{ _('Browser') }}',
                 showTitle: false,
-                isClosable: false,
+                isCloseable: false,
                 isPrivate: true,
                 content: '<div id="tree" class="aciTree"></div>'
             }),
@@ -71,25 +71,25 @@ OWNER TO helpdesk;\n';
                 name: 'properties',
                 title: '{{ _('Properties') }}',
                 width: 500,
-                isClosable: false,
+                isCloseable: false,
                 isPrivate: true,
-                content: '<div id="obj_props" class="obj_properties">No object selected!</div>'
+                content: '<div class="obj_properties">No object selected!</div>'
             }),
             // Statistics of the object
             'statistics': new pgAdmin.Browser.Panel({
                 name: 'statistics',
                 title: '{{ _('Statistics') }}',
                 width: 500,
-                isClosable: false,
-                    isPrivate: true,
-                    content: '<p>Statistics pane</p>'
-                }),
+                isCloseable: false,
+                isPrivate: true,
+                content: '<p>Statistics pane</p>'
+            }),
             // Reversed engineered SQL for the object
             'sql': new pgAdmin.Browser.Panel({
                 name: 'sql',
                 title: '{{ _('SQL') }}',
                 width: 500,
-                isClosable: false,
+                isCloseable: false,
                 isPrivate: true,
                 // TODO:: Revove demoSql later
                 content: '<textarea id="sql-textarea" name="sql-textarea">' + demoSql + '</textarea>'
@@ -99,7 +99,7 @@ OWNER TO helpdesk;\n';
                 name: 'dependencies',
                 title: '{{ _('Dependencies') }}',
                 width: 500,
-                isClosable: false,
+                isCloseable: false,
                 isPrivate: true,
                 content: '<p>Depedencies pane</p>'
             }),
@@ -108,7 +108,7 @@ OWNER TO helpdesk;\n';
                 name: 'dependents',
                 title: '{{ _('Dependents') }}',
                 width: 500,
-                isClosable: false,
+                isCloseable: false,
                 isPrivate: true,
                 content: '<p>Dependent pane</p>'
             })/* Add hooked-in panels by extensions */{% for panel_item in current_app.panels %}{% if not panel_item.isIframe %},'{{ panel_item.name }}' : new pgAdmin.Browser.Panel({
@@ -117,7 +117,7 @@ OWNER TO helpdesk;\n';
                 width: {{ panel_item.width }},
                 height: {{ panel_item.height }},
                 showTitle: (Boolean('{{ panel_item.showTitle|lower }}') == true),
-                isClosable: (Boolean('{{ panel_item.isCloseable|lower }}') == true),
+                isCloseable: (Boolean('{{ panel_item.isCloseable|lower }}') == true),
                 isPrivate: (Boolean('{{ panel_item.isPrivate|lower }}') == true),
                 content: '{{ panel_item.content }}'
             }){% endif %}{% endfor %}
@@ -129,7 +129,7 @@ OWNER TO helpdesk;\n';
                 name: 'dashboard',
                 title: '{{ _('Dashboard') }}',
                 width: 500,
-                isClosable: false,
+                isCloseable: false,
                 isPrivate: true,
                 url: 'about:blank' /* TODO:: Change it with http://www.pgadmin.org later */
             })/* Add hooked-in frames by extensions */{% for panel_item in current_app.panels %}{% if panel_item.isIframe %},
@@ -139,7 +139,7 @@ OWNER TO helpdesk;\n';
                 width: {{ panel_item.width }},
                 height: {{ panel_item.height }},
                 showTitle: (Boolean('{{ panel_item.showTitle|lower }}') == true),
-                isClosable: (Boolean('{{ panel_item.isCloseable|lower }}') == true),
+                isCloseable: (Boolean('{{ panel_item.isCloseable|lower }}') == true),
                 isPrivate: (Boolean('{{ panel_item.isPrivate|lower }}') == true),
                 url: '{{ panel_item.content }}'
             }){% endif %}{% endfor %}
@@ -172,8 +172,7 @@ OWNER TO helpdesk;\n';
         },
         // Build the default layout
         buildDefaultLayout: function() {
-            this.docker.addPanel('dashboard', wcDocker.DOCK_TOP,
-                    this.panels['properties'].panel);
+            this.docker.addPanel('dashboard', wcDocker.DOCK_RIGHT);
             this.docker.addPanel('properties', wcDocker.DOCK_STACKED,
                     this.frames['dashboard'].panel);
             this.docker.addPanel('sql', wcDocker.DOCK_STACKED,
@@ -184,7 +183,6 @@ OWNER TO helpdesk;\n';
                     this.frames['dashboard'].panel);
             this.docker.addPanel('dependents', wcDocker.DOCK_STACKED,
                     this.frames['dashboard'].panel);
-
             this.docker.addPanel('browser', wcDocker.DOCK_LEFT,
                     this.frames['dashboard'].panel);
         },
