@@ -304,8 +304,6 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                 p = pgBrowser.docker.addPanel('node_props', wcDocker.DOCK_STACKED,
                         pgBrowser.panels['properties'].panel);
 
-                console.log(d);
-
                 p.title(S('{{ _("Create - %%s") }}').sprintf([
                             this.label]).value());
 
