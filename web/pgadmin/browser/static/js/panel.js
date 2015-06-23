@@ -5,7 +5,7 @@ function(_, pgAdmin) {
     pgAdmin.Browser.Panel = function(options) {
         var defaults = [
             'name', 'title', 'width', 'height', 'showTitle', 'isCloseable',
-            'isPrivate', 'content'];
+            'isPrivate', 'content', 'events'];
         _.extend(this, _.pick(options, defaults));
     }
 
@@ -36,7 +36,7 @@ function(_, pgAdmin) {
                         that.panel = myPanel;
                         if (that.events && _.isObject(that.events)) {
                             _.each(that.events, function(v, k) {
-                                if (v) {
+                                if (v && _.isFunction(v)) {
                                     myPanel.on(k, v);
                                 }
                             });

@@ -185,6 +185,9 @@
       obj.$el.empty();
 
       _.each(this.schema, function(o) {
+        if (!o.fields)
+          return;
+
         var h = $((obj.template['header'])(o)).appendTo(obj.$el), 
           el = $((obj.template['content'])(o))
               .appendTo(h);

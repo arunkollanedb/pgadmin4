@@ -39,6 +39,23 @@ WITH ( \n\
 ALTER TABLE tickets_detail \n\
 OWNER TO helpdesk;\n';
 
+    var panelEvents = {};
+    panelEvents[wcDocker.EVENT_VISIBILITY_CHANGED] = function() {
+
+        if (this.isVisible()) {
+            var obj = pgAdmin.Browser,
+                i   = obj.tree.selected(),
+                    d   = i && i.length == 1 ? obj.tree.itemData(i) : undefined;
+
+            if (d && obj.Nodes[d._type].callbacks['selected'] &&
+                    _.isFunction(obj.Nodes[d._type].callbacks['selected'])) {
+                return obj.Nodes[d._type].callbacks['selected'].apply(
+                        obj.Nodes[d._type],
+                        [{ data: d, browser: obj, item: i }]);
+            }
+        }
+    };
+
     // Extend the browser class attributes
     _.extend(pgAdmin.Browser, {
         // The base url for browser
@@ -73,7 +90,8 @@ OWNER TO helpdesk;\n';
                 width: 500,
                 isCloseable: false,
                 isPrivate: true,
-                content: '<div class="obj_properties">No object selected!</div>'
+                content: '<div class="obj_properties">No object selected!</div>',
+                events: panelEvents
             }),
             // Statistics of the object
             'statistics': new pgAdmin.Browser.Panel({
@@ -82,7 +100,8 @@ OWNER TO helpdesk;\n';
                 width: 500,
                 isCloseable: false,
                 isPrivate: true,
-                content: '<p>Statistics pane</p>'
+                content: '<p>Statistics pane</p>',
+                events: panelEvents
             }),
             // Reversed engineered SQL for the object
             'sql': new pgAdmin.Browser.Panel({
@@ -92,7 +111,8 @@ OWNER TO helpdesk;\n';
                 isCloseable: false,
                 isPrivate: true,
                 // TODO:: Revove demoSql later
-                content: '<textarea id="sql-textarea" name="sql-textarea">' + demoSql + '</textarea>'
+                content: '<textarea id="sql-textarea" name="sql-textarea">' + demoSql + '</textarea>',
+                events: panelEvents
             }),
             // Dependencies of the object
             'dependencies': new pgAdmin.Browser.Panel({
@@ -101,7 +121,8 @@ OWNER TO helpdesk;\n';
                 width: 500,
                 isCloseable: false,
                 isPrivate: true,
-                content: '<p>Depedencies pane</p>'
+                content: '<p>Depedencies pane</p>',
+                events: panelEvents
             }),
             // Dependents of the object
             'dependents': new pgAdmin.Browser.Panel({
@@ -110,7 +131,8 @@ OWNER TO helpdesk;\n';
                 width: 500,
                 isCloseable: false,
                 isPrivate: true,
-                content: '<p>Dependent pane</p>'
+                content: '<p>Dependent pane</p>',
+                events: panelEvents
             })/* Add hooked-in panels by extensions */{% for panel_item in current_app.panels %}{% if not panel_item.isIframe %},'{{ panel_item.name }}' : new pgAdmin.Browser.Panel({
                 name: '{{ panel_item.name }}',
                 title: '{{ panel_item.title }}',
@@ -119,7 +141,8 @@ OWNER TO helpdesk;\n';
                 showTitle: (Boolean('{{ panel_item.showTitle|lower }}') == true),
                 isCloseable: (Boolean('{{ panel_item.isCloseable|lower }}') == true),
                 isPrivate: (Boolean('{{ panel_item.isPrivate|lower }}') == true),
-                content: '{{ panel_item.content }}'
+                content: '{{ panel_item.content }}'{% if panel_item.events is not none %},
+                events: {{ panel_item.events }} {% endif %}
             }){% endif %}{% endfor %}
         },
         // We also support showing dashboards, HTML file, external URL
