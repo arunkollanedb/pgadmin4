@@ -118,7 +118,8 @@ class ServerGroupView(NodeView):
                     errormsg=gettext('The specified server group could not be found.'))
         else:
             try:
-                db.session.delete(servergroup)
+                for sg in servergroup:
+                    db.session.delete(sg)
                 db.session.commit()
             except Exception as e:
                 return make_json_response(status=410, success=0, errormsg=e.message)

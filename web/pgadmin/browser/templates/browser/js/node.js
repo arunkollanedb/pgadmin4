@@ -537,11 +537,191 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
             },
             // Delete the selected object
             delete_obj: function() {
-                console.log(arguments);
+                var obj = this,
+                    t = pgBrowser.tree,
+                    i = t.selected(),
+                    d = i && i.length == 1 ? t.itemData(i) : undefined;
+
+                if (!d)
+                    return;
+
+                Alertify.confirm(
+                    S('{{ _('Drop %%s?') }}').sprintf(obj.label).value(),
+                    S('{{ _('Are you sure you wish to drop the %%s - "%%s"?') }}')
+                        .sprintf(obj.label, d.label).value(),
+                        function() {
+                            $.ajax({
+                                url: obj.generate_url('drop', d, true),
+                                type:'DELETE',
+                                success: function(res) {
+                                    if (res.success == 0) {
+                                        report_error(res.errormsg, res.info);
+                                    } else {
+                                        var n = t.next(i);
+                                        if (!n || !n.length)
+                                            n = t.prev(i);
+                                        t.remove(i);
+                                        if (n.length) {
+                                            t.select(n);
+                                        }
+                                    }
+                                },
+                                error: function(jqx) {
+                                    var msg = jqx.responseText;
+                                    /* Error from the server */
+                                    if (jqx.status == 410) {
+                                        try {
+                                            var data = $.parseJSON(
+                                                    jqx.responseText);
+                                            msg = data.errormsg;
+                                        } catch (e) {}
+                                    }
+                                    pgBrowser.report_error(
+                                            S('{{ _('Error droping the %%s - "%%s"') }}')
+                                                .sprintf(obj.label, d.label)
+                                                    .value(), msg);
+                                }
+                            });
+                        },
+                        null).show()
             },
-            // Rename the selected object
-            rename_obj: function() {
-                console.log(arguments);
+            // Edit the object properties
+            edit_obj: function() {
+                var t = pgBrowser.tree,
+                    i = t.selected(),
+                    d = i && i.length == 1 ? t.itemData(i) : undefined;
+
+                if (!d)
+                    return;
+
+                // Make sure - the properties dialog open
+                pgBrowser.Node.register_node_panel();
+
+                p = pgBrowser.docker.addPanel('node_props',
+                        wcDocker.DOCK_STACKED,
+                        pgBrowser.panels['properties'].panel);
+                p.title(S('%s - %s').sprintf(this.label, d.label).value());
+                p.icon('icon-' + this.type);
+
+                // Make sure the properties dialog is visible
+                p.focus();
+
+                var that = this,
+                    j = p.$container.find('.obj_properties').first(),
+                    // In order to release the memory allocated to the view, we need
+                    // to keep the view object in this panel.
+                    view = j.data('obj-view'),
+                    // This is where, we will keep the properties
+                    // fieldsets.
+                    content = $('<div></div>').addClass('pg-prop-content col-xs-12'),
+                    // Template function to create the buttons-set.
+                    createButtons = function(buttons) {
+                        // arguments must be non-zero length array of type
+                        // object, which contains following attributes:
+                        // label, type, extraClasses, register
+                        if (buttons && _.isArray(buttons) && buttons.length > 0) {
+                            // All buttons will be created within a single
+                            // div area.
+                            var btnGroup =
+                                $('<div></div>').addClass(
+                                    'pg-prop-btn-group col-xs-12'
+                                    ).appendTo(j),
+                                // Template used for creating a button
+                                tmpl = _.template([
+                                    '<button type="<%=type%>"',
+                                    'class="btn <%=extraClasses.join(\' \')%>"',
+                                    '><%-label%></button>'
+                                    ].join(' '));
+                            _.each(buttons, function(btn) {
+                                // Create the actual button, and append to
+                                // the group div
+                                var b = $(tmpl(btn));
+                                btnGroup.append(b);
+                                // Register is a callback to set callback
+                                // for certain operatio for this button.
+                                btn.register(b);
+                            });
+                            return btnGroup;
+                        }
+                        return null;
+                    },
+                    // Function to create the object of this type
+                    editFunc = function() {
+                        // We need to release any existing view, before
+                        // creating new view.
+                        if (view) {
+                            // Release the view
+                            view.close();
+                            // Deallocate the view
+                            delete view;
+                            view = null;
+                            // Reset the data object
+                            j.data('obj-view', null);
+                        }
+                        // Make sure - nothing is displayed now
+                        j.empty();
+                        // Generate a view for creating the node in
+                        // properties tab.
+                        view = that.getView('edit', content, d, 'fieldset');
+
+                        // Did we get success to generate the view?
+                        if (view) {
+                            // Save it to release it later.
+                            j.data('obj-view', view);
+
+                            // Create the buttons now.
+                            createButtons([{
+                                label: '{{ _('Save') }}', type: 'save',
+                                extraClasses: ['btn-primary'],
+                                register: function(btn) {
+                                    // Create a new node on clicking this
+                                    // button
+                                    btn.click(function() {
+                                        var m = view.model;
+                                        if (m.changed &&
+                                            !_.isEmpty(m.changed)) {
+                                            // Create the object by calling
+                                            // model.save()
+                                            m.save({} ,{
+                                                success: function(model, response) {
+                                                    /* TODO:: Add this node to the tree */
+                                                    alert('{{ _('Show this object in the browser tree and select it!') }} ');
+                                                },
+                                                error: function() {
+                                                    /* TODO:: Alert for the user on error */
+                                                    console.log('{{ _('ERROR:') }}');
+                                                    console.log(arguments);
+                                                }
+                                                });
+                                        }
+                                    });
+                                }
+                            },{
+                                label: '{{ _('Cancel') }}', type: 'cancel',
+                                extraClasses: ['btn-danger'],
+                                register: function(btn) {
+                                    btn.click(function() {
+                                        /* TODO:: Show properties of the current selected object */
+                                        alert('{{ _('show properties of selected node') }}');
+                                    });
+                                }
+                            },{
+                                label: '{{ _('Reset') }}', type: 'reset',
+                                extraClasses: ['btn-warning'],
+                                register: function(btn) {
+                                    btn.click(function() {
+                                        // Reset the content
+                                        setTimeout(function() { editFunc(); }, 100);
+                                    });
+                                }
+                            }])
+                        }
+                        j.append(content);
+                    };
+
+                // Call the editFunc(...) by default to open the create
+                // node fieldset in new node_props tab.
+                editFunc();
             },
             // Callback called - when a node is selected in browser tree.
             selected: function(o) {
@@ -737,21 +917,29 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
             properties();
         },
         // What am I refering to (parent or me)?
-        reference: function(d) {
-            return (d._type == this.type ?
-                    (d.refid ? '/' + d.refid : '') : ( '/' + d._id + '/'));
+        reference: function(d, with_id) {
+            if (d._type == this.type) {
+                var res = '';
+                if (d.refid)
+                    res = S('/%s').sprintf(d.refid).value();
+                if (with_id)
+                    res = S('%s/%s').sprintf(res, d._id).value();
+                return res;
+            }
+            return S('/%s/').sprintf(d._id);
         },
         // Generate the URL for different purposes
-        generate_url: function(type, data) {
+        generate_url: function(type, data, with_id) {
             var url = pgAdmin.Browser.URL + '{TYPE}/{REDIRECT}{REF}';
             var args = { 'TYPE': this.type, 'REDIRECT': '',
-                'REF': this.reference(data) };
+                'REF': this.reference(data, with_id) };
 
             switch(type) {
                 case 'create':
                     if (!this.parent_type) {
                         args.REF = '/';
                     }
+                case 'drop':
                 case 'properties':
                 case 'edit':
                     args.REDIRECT = 'obj';

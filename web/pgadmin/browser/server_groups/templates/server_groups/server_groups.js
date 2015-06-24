@@ -28,9 +28,9 @@ function($, _, pgAdmin, Backbone) {
           applies: ['object', 'context'], callback: 'delete_obj',
           priority: 2, label: '{{ _('Drop Server Group...') }}'
         }, {
-          name: 'rename_server_group', node: 'server-group', module: this,
-          applies: ['object', 'context'], callback: 'rename_obj',
-          priority: 3, label: '{{ _('Rename Server Group...') }}'
+          name: 'edit_server_group', node: 'server-group', module: this,
+          applies: ['object', 'context'], callback: 'edit_obj',
+          priority: 3, label: '{{ _('Edit Server Group...') }}'
         }]);
       },
       model: pgAdmin.Browser.Node.Model.extend({

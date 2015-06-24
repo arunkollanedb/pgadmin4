@@ -36,9 +36,9 @@ function($, _, pgAdmin, pgBrowser, alertify) {
           applies: ['object', 'context'], callback: 'delete_obj',
           category: 'drop', priority: 3, label: '{{ _('Drop Server...') }}'
         }, {
-          name: 'rename_server', node: 'server', module: this,
-          applies: ['object', 'context'], callback: 'rename_obj',
-          category: 'renmae', priority: 4, label: '{{ _('Rename Server...') }}'
+          name: 'edit_server', node: 'server', module: this,
+          applies: ['object', 'context'], callback: 'edit_obj',
+          category: 'edit', priority: 4, label: '{{ _('Edit Server properties...') }}'
         }]);
       },
       callbacks: {
@@ -76,58 +76,7 @@ function($, _, pgAdmin, pgBrowser, alertify) {
             },
             null
             );
-            alert.show();
-          },
-        // Delete a server
-        drop_server: function (item) {
-          alertify.confirm(
-            '{{ _('Drop server?') }}',
-            '{{ _('Are you sure you wish to drop the server "{0}"?') }}'.replace('{0}', tree.getLabel(item)),
-            function() {
-              var id = tree.getId(item).split('/').pop()
-              $.ajax({
-                url:"{{ url_for('browser.index') }}" + d._type + "/obj/" + d.refid + '/' + d.id,
-                type:'DELETE',
-                success: function(data) {
-                  if (data.success == 0) {
-                    report_error(data.errormsg, data.info);
-                  } else {
-                    var next = tree.next(item);
-                    var prev = tree.prev(item);
-                    tree.remove(item);
-                    if (next.length) {
-                      tree.select(next);
-                    } else if (prev.length) {
-                      tree.select(prev);
-                    }
-                  }
-                }})
-              },
-              null
-            )
-        },
-        // Rename a server
-        rename_server: function (item) {
-          alertify.prompt(
-            '{{ _('Rename server') }}',
-            '{{ _('Enter a new name for the server') }}',
-            tree.getLabel(item),
-            function(evt, value) {
-              var d = tree.itemData(item);
-              $.ajax({
-                url:"{{ url_for('browser.index') }}" + d._type + "/obj/" + d.refid,
-                type:'PUT',
-                params: {name: value},
-                success: function(data) {
-                  if (data.success == 0) {
-                    report_error(data.errormsg, data.info);
-                  } else {
-                    tree.setLabel(item, { label: value });
-                  }
-                }})
-            },
-            null
-          )
+          alert.show();
         },
         /* Connect the server (if not connected), before opening this node */
         beforeopen: function(o) {

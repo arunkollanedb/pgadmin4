@@ -242,8 +242,9 @@ iframe {
     padding: 12px 8px;
     margin: 0px;
     border-color: darkolivegreen;
-    border-width: 1px;
-    border-style: solid
+    border-width: 1.5px;
+    border-style: double;
+    background-color: #F2F2F2;
 }
 
 .obj_properties .badge {
