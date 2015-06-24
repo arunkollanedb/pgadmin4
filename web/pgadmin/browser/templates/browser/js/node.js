@@ -306,6 +306,7 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
 
                 p.title(S('{{ _("Create - %%s") }}').sprintf([
                             this.label]).value());
+                p.icon('icon-' + this.type);
 
                 // Make sure the properties dialog is visible
                 p.focus();
@@ -526,6 +527,7 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                     p = pgBrowser.docker.addPanel('node_props', wcDocker.DOCK_STACKED,
                             pgBrowser.panels['properties'].panel);
                     p.title(o.title(d));
+                    p.icon('icon-' + this.type);
                     pgBrowser.Node.panels = pgBrowser.Node.panels || {};
                     pgBrowser.Node.panels[d.id] = p;
                     o.showProperties(t, i, d,

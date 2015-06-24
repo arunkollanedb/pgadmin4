@@ -139,7 +139,7 @@ class BrowserPluginModule(PgAdminModule):
 
     def __init__(self, import_name, **kwargs):
         kwargs.setdefault("url_prefix", self.node_path)
-        kwargs.setdefault("static_url_path", 'static')
+        kwargs.setdefault("static_url_path", '/static')
         super(BrowserPluginModule, self).__init__("NODE-%s" % self.node_type,
                                             import_name,
                                             **kwargs)
