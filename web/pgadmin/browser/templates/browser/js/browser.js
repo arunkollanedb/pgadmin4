@@ -90,7 +90,7 @@ OWNER TO helpdesk;\n';
                 width: 500,
                 isCloseable: false,
                 isPrivate: true,
-                content: '<div class="obj_properties">No object selected!</div>',
+                content: '<div class="obj_properties col-xs-12 col-sm-10 col-md-8">No object selected!</div>',
                 events: panelEvents
             }),
             // Statistics of the object

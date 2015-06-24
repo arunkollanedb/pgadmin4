@@ -244,7 +244,7 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                     showTitle: true,
                     isCloseable: true,
                     isPrivate: false,
-                    content: '<div class="obj_properties">No object selected!</div>'
+                    content: '<div class="obj_properties col-xs-12 col-sm-10 col-md-8">No object selected!</div>'
                 });
             p.load(pgBrowser.docker);
         },
@@ -317,7 +317,7 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                     view = j.data('obj-view'),
                     // This is where, we will keep the properties
                     // fieldsets.
-                    content = $('<div></div>').addClass('pg-prop-content col-sm-10 col-xs-12'),
+                    content = $('<div></div>').addClass('pg-prop-content col-xs-12'),
                     // Template function to create the buttons-set.
                     createButtons = function(buttons) {
                         // arguments must be non-zero length array of type
@@ -328,7 +328,7 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                             // div area.
                             var btnGroup =
                                 $('<div></div>').addClass(
-                                    'pg-prop-btn-group col-sm-10 col-xs-12'
+                                    'pg-prop-btn-group col-xs-12'
                                     ).appendTo(j),
                                 // Template used for creating a button
                                 tmpl = _.template([
@@ -475,7 +475,7 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                     return;
 
                 var that = this,
-                    content = $('<div></div>').addClass('pg-prop-content col-sm-10 col-xs-12'),
+                    content = $('<div></div>').addClass('pg-prop-content col-xs-12'),
                     cb = function(v) {
                         // Create the dialog
                         Alertify.dlgNode || Alertify.dialog('dlgNode',
@@ -596,7 +596,7 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
         showProperties: function(tree, item, node, j) {
             var that = this,
                 view = j.data('obj-view'),
-                content = $('<div></div>').addClass('pg-prop-content col-sm-10 col-xs-12'),
+                content = $('<div></div>').addClass('pg-prop-content col-xs-12'),
                 // Template function to create the buttons-set.
                 createButtons = function(buttons) {
                     // arguments must be non-zero length array of type
@@ -607,7 +607,7 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                         // div area.
                         var btnGroup =
                             $('<div></div>').addClass(
-                                'pg-prop-btn-group col-sm-10 col-xs-12'
+                                'pg-prop-btn-group col-xs-12'
                                 ).appendTo(j),
                             // Template used for creating a button
                             tmpl = _.template([
