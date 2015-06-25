@@ -33,8 +33,8 @@
   // HTML markup global class names. More can be added by individual controls
   // using _.extend. Look at RadioControl as an example.
   _.extend(Backform, {
-    controlLabelClassName: "control-label col-sm-4 col-xs-12",
-    controlsClassName: "pgadmin-controls col-sm-8 col-xs-12",
+    controlLabelClassName: "control-label col-sm-4",
+    controlsClassName: "pgadmin-controls col-sm-8",
     groupClassName: "pgadmin-control-group form-group col-xs-12",
     setGroupClassName: "set-group col-xs-12",
     tabClassName: "backform-tab col-xs-12",

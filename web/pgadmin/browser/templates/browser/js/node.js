@@ -244,7 +244,7 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                     showTitle: true,
                     isCloseable: true,
                     isPrivate: false,
-                    content: '<div class="obj_properties col-xs-12 col-sm-10 col-md-8">No object selected!</div>'
+                    content: '<div class="obj_properties">No object selected!</div>'
                 });
             p.load(pgBrowser.docker);
         },
@@ -301,7 +301,7 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                 // Make sure - the properties dialog open
                 pgBrowser.Node.register_node_panel();
 
-                p = pgBrowser.docker.addPanel('node_props', wcDocker.DOCK_STACKED,
+                p = pgBrowser.docker.addPanel('node_props', wcDocker.DOCK_FLOAT,
                         pgBrowser.panels['properties'].panel);
 
                 p.title(S('{{ _("Create - %%s") }}').sprintf([
@@ -318,7 +318,7 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                     view = j.data('obj-view'),
                     // This is where, we will keep the properties
                     // fieldsets.
-                    content = $('<div></div>').addClass('pg-prop-content col-xs-12'),
+                    content = $('<div></div>').addClass('has-pg-prop-btn-group pg-prop-content col-xs-12'),
                     // Template function to create the buttons-set.
                     createButtons = function(buttons) {
                         // arguments must be non-zero length array of type
@@ -476,7 +476,7 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                     return;
 
                 var that = this,
-                    content = $('<div></div>').addClass('pg-prop-content col-xs-12'),
+                    content = $('<div></div>').addClass('has-pg-prop-btn-group pg-prop-content col-xs-12'),
                     cb = function(v) {
                         // Create the dialog
                         Alertify.dlgNode || Alertify.dialog('dlgNode',
@@ -524,7 +524,7 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                         pgBrowser.Node.panels[d.id].$container) {
                     p = pgBrowser.Node.panels[d.id];
                 } else {
-                    p = pgBrowser.docker.addPanel('node_props', wcDocker.DOCK_STACKED,
+                    p = pgBrowser.docker.addPanel('node_props', wcDocker.DOCK_FLOAT,
                             pgBrowser.panels['properties'].panel);
                     p.title(o.title(d));
                     p.icon('icon-' + this.type);
@@ -598,8 +598,7 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                 pgBrowser.Node.register_node_panel();
 
                 p = pgBrowser.docker.addPanel('node_props',
-                        wcDocker.DOCK_STACKED,
-                        pgBrowser.panels['properties'].panel);
+                        wcDocker.DOCK_FLOAT);
                 p.title(S('%s - %s').sprintf(this.label, d.label).value());
                 p.icon('icon-' + this.type);
 
@@ -613,7 +612,7 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                     view = j.data('obj-view'),
                     // This is where, we will keep the properties
                     // fieldsets.
-                    content = $('<div></div>').addClass('pg-prop-content col-xs-12'),
+                    content = $('<div></div>').addClass('has-pg-prop-btn-group pg-prop-content col-xs-12'),
                     // Template function to create the buttons-set.
                     createButtons = function(buttons) {
                         // arguments must be non-zero length array of type
@@ -781,7 +780,7 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
         showProperties: function(tree, item, node, j) {
             var that = this,
                 view = j.data('obj-view'),
-                content = $('<div></div>').addClass('pg-prop-content col-xs-12'),
+                content = $('<div></div>').addClass('has-pg-prop-btn-group pg-prop-content col-xs-12'),
                 // Template function to create the buttons-set.
                 createButtons = function(buttons) {
                     // arguments must be non-zero length array of type
@@ -839,7 +838,8 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                             extraClasses: ['btn-primary'],
                             register: function(btn) {
                                 btn.click(function() {
-                                    editFunc();
+                                    // editFunc();
+                                    that.callbacks.edit_obj.apply(that);
                                 });
                             }
                         }]);

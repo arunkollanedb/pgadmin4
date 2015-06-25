@@ -184,9 +184,7 @@ iframe {
 }
 
 .obj_properties {
-    padding: 1px;
-    min-width: 350px;
-    max-width: 900px;
+    padding: 0px;
 }
 
 .obj_properties .pgadmin-control .uneditable-input {
@@ -302,9 +300,38 @@ iframe {
     vertical-align: middle;
 }
 
+.pg-prop-btn-group {
+    position: absolute;
+    text-align: right;
+    background-color: #D2D2D2;
+    border: 2px solid #A9A9A9;
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    padding: 3px 7px 3px 3px;
+}
+
 .pg-prop-btn-group button {
     margin: 5px;
 }
+
+.pg-prop-content {
+    margin: 0 auto;
+    width: 100%;
+    position: absolute;
+    overflow: auto;
+    top: 0em;
+    bottom: 0px;
+    margin-top: 1em;
+    padding-right: 0;
+    padding-left: 0;
+}
+
+.has-pg-prop-btn-group {
+    top: 3em;
+}
+
+
 
 .pg-prop-content > div {
     margin-top: 5px;
