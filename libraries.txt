@@ -15,3 +15,6 @@ Require.js        2.1.18      BSD/MIT      http://requirejs.org/
 Underscore.js     1.8.3       MIT          http://underscorejs.org/
 Underscore.string 387ab72d49  MIT          http://epeli.github.io/underscore.string/
 Backform.js       6270ec07e2  MIT          https://github.com/AmiliaApp/backform
+font-Awesome      4.3         SIL OFL      http://fortawesome.github.io/Font-Awesome/
+font-mfizz        1.2         MIT          http://fizzed.com/oss/font-mfizz
+

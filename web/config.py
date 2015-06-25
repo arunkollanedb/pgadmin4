@@ -20,6 +20,7 @@ import os
 
 # Name of the application to display in the UI
 APP_NAME = 'pgAdmin 4'
+APP_ICON = 'icon-postgres-alt'
 
 # Application version number components
 APP_MAJOR = 1

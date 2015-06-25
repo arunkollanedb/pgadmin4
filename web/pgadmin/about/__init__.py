@@ -29,6 +29,7 @@ class AboutModule(PgAdminModule):
                          priority=999,
                          module="pgAdmin.About",
                          callback='about_show',
+                         icon='fa fa-lg fa-info-circle',
                          label=gettext('About %(appname)s',
                                        appname=config.APP_NAME))
             ]

@@ -26,7 +26,7 @@ try {
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="#">{{ config.APP_NAME }}</a>
+      <a class="navbar-brand" href="#"><i>{{ config.APP_NAME }}&nbsp;</i><i class="app-icon {{ config.APP_ICON }}"></i></a>
    </div>
 
     <div class="collapse navbar-collapse" id="navbar-menu">
@@ -45,7 +45,7 @@ try {
           <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{ _('Object') }} <span class="caret"></span></a>
           <ul id="mnu_dropdown_obj" class="dropdown-menu navbar-inverse" role="menu">
             <li id="mnu_create_dropdown_obj" class="menu-item dropdown dropdown-submenu">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown">Create</a>
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-lg fa-magic"></i>&nbsp;&nbsp;{{ _('Create') }}</a>
               <ul id="mnu_create_obj" class="dropdown-menu navbar-inverse">
                 <li class="menu-item">
                   <a href="#">Link 1</a>

@@ -468,7 +468,8 @@ OWNER TO helpdesk;\n';
                         {% endif %}{% if item.callback %}callback: "{{ item.callback }}",
                         {% endif %}label: '{{ item.label }}', applies: ['{{ key.lower() }}'],
                         priority: {{ item.priority }},
-                        enable: '{{ item.enable }}'
+                        enable: '{{ item.enable }}'{% if item.icon %},
+                        icon: '{{ item.icon }}'{% endif %}
                     }{% set cnt = cnt + 1 %}{% endfor %}{% set cnt = cnt + 1 %}{% endfor %}]);
                     obj.create_menus();
                 } else {
@@ -523,7 +524,10 @@ OWNER TO helpdesk;\n';
                                 name: m.name, label: m.label, module: m.module,
                                 category: m.category, callback: m.callback,
                                 priority: m.priority, data: m.data, url: m.url,
-                                enable: m.enable == '' ? true : _.isString(m.enable) && m.enable.toLowerCase() == 'false' ? false : m.enable
+                                icon: m.icon, enable: (m.enable == '' ? true :
+                                    (_.isString(m.enable) &&
+                                        m.enable.toLowerCase() == 'false') ?
+                                    false : m.enable)
                             });
                         }
                     } else  {

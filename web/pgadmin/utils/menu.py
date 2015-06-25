@@ -10,7 +10,8 @@ class MenuItem(object):
 class Panel(object):
 
     def __init__(self, name, title, content, width=500, height=600, isIframe=True,
-                 showTitle=True, isCloseable=True, isPrivate=False, priority=None):
+                 showTitle=True, isCloseable=True, isPrivate=False, priority=None,
+                 icon=None):
         self.name = name
         self.title = title
         self.content = content
@@ -20,6 +21,7 @@ class Panel(object):
         self.showTitle = showTitle
         self.isCloseable = isCloseable
         self.isPrivate = isPrivate
+        self.icon = icon
         if priority is None:
             global PRIORITY
             PRIORITY += 100

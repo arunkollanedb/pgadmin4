@@ -18,27 +18,33 @@ function($, _, pgAdmin, pgBrowser, alertify) {
         pgBrowser.add_menus([{
           name: 'create_server_on_sg', node: 'server-group', module: this,
           applies: ['object', 'context'], callback: 'create_obj',
-          category: 'create', priority: 1, label: '{{ _('Server...') }}'
+          category: 'create', priority: 1, label: '{{ _('Server...') }}',
+          icon: 'wcTabIcon icon-server'
         }, {
           name: 'create_server_on_sg_dlg', node: 'server-group', module: this,
           applies: ['object', 'context'], callback: 'create_obj_dlg',
-          category: 'create', priority: 2, label: '{{ _('Server (Dialog)...') }}'
+          category: 'create', priority: 2, label: '{{ _('Server (Dialog)...') }}',
+          icon: 'wcTabIcon icon-server'
         },{
           name: 'create_server', node: 'server', module: this,
           applies: ['object', 'context'], callback: 'create_obj',
-          category: 'create', priority: 3, label: '{{ _('Server...') }}'
+          category: 'create', priority: 3, label: '{{ _('Server...') }}',
+          icon: 'wcTabIcon icon-server'
         }, {
           name: 'create_server_dlg', node: 'server', module: this,
           applies: ['object', 'context'], callback: 'create_obj_dlg',
-          category: 'create', priority: 4, label: '{{ _('Server (Dialog)...') }}'
-        },{
-          name: 'drop_server', node: 'server', module: this,
-          applies: ['object', 'context'], callback: 'delete_obj',
-          category: 'drop', priority: 3, label: '{{ _('Drop Server...') }}'
+          category: 'create', priority: 4, label: '{{ _('Server (Dialog)...') }}',
+          icon: 'wcTabIcon icon-server'
         }, {
           name: 'edit_server', node: 'server', module: this,
           applies: ['object', 'context'], callback: 'edit_obj',
-          category: 'edit', priority: 4, label: '{{ _('Edit Server properties...') }}'
+          category: 'edit', priority: 4, label: '{{ _('Edit...') }}',
+          icon: 'fa fa-lg fa-pencil-square-o'
+        },{
+          name: 'drop_server', node: 'server', module: this,
+          applies: ['object', 'context'], callback: 'delete_obj',
+          category: 'drop', priority: 3, label: '{{ _('Drop Server...') }}',
+          icon: 'fa fa-lg fa-trash'
         }]);
       },
       callbacks: {

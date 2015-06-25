@@ -6,7 +6,8 @@ function(_, pgAdmin, $) {
   pgAdmin.Browser = pgAdmin.Browser || {};
   pgAdmin.Browser.MenuItem = function(opts) {
     var menu_opts = [
-      'name', 'label', 'priority', 'module', 'callback', 'data', 'enable', 'category', 'target', 'url'
+      'name', 'label', 'priority', 'module', 'callback', 'data', 'enable',
+      'category', 'target', 'url', 'icon'
     ],
     defaults = {
       url: '#',
@@ -30,7 +31,9 @@ function(_, pgAdmin, $) {
             module: this.module || pgAdmin.Browser,
             cb: this.callback,
             data: this.data
-          }).text(this.label).addClass('menu-link'));
+          }).addClass('menu-link')
+          .append($('<i></i>', {'class': this.icon}))
+          .append($('<span></span>').text('  ' + this.label)));
     },
     disabled: function(o) {
         if (_.isFunction(this.enable)) return !this.enable.apply(this.module, [this.data]);

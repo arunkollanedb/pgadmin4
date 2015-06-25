@@ -100,7 +100,8 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
             pgAdmin.Browser.add_menus([{
                 name: 'show_node_properties', node: this.type, module: this,
                 applies: ['object', 'context'], callback: 'show_obj_properties',
-                priority: 3, label: '{{ _("Properties...") }}'
+                priority: 3, label: '{{ _("Properties...") }}',
+                icon: 'fa fa-lg fa-th-list'
             }]);
         },
         ///////
@@ -795,9 +796,10 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                                 ).appendTo(j),
                             // Template used for creating a button
                             tmpl = _.template([
-                                '<button type="<%=type%>"',
-                                'class="btn <%=extraClasses.join(\' \')%>"',
-                                '><%-label%></button>'
+                                '<btn type="<%= type %>" ',
+                                'class="btn <%=extraClasses.join(\' \')%>">',
+                                '<i class="fa <%= icon %> fa-lg"></i>',
+                                '<%-label%></button>'
                                 ].join(' '));
                         _.each(buttons, function(btn) {
                             // Create the actual button, and append to
@@ -835,7 +837,7 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                         // Create proper buttons
                         createButtons([{
                             label: '{{ _("Edit") }}', type: 'edit',
-                            extraClasses: ['btn-primary'],
+                            extraClasses: ['btn-primary'], icon: 'fa-pencil-square-o',
                             register: function(btn) {
                                 btn.click(function() {
                                     // editFunc();
