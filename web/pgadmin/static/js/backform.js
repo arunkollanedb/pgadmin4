@@ -73,33 +73,9 @@
     }
   };
 
-  var View = Backform.View = Backbone.View.extend({
-    controls: undefined
-  });
-
-  _.extend(Backform.View.prototype, {
-    close: function() {
-      if (this.controls) {
-        _.each(this.controls, function(c) {
-          c.close();
-          delete c;
-        });
-        this.controls = undefined;
-      }
-
-      /* Give user chance to do his/her part */
-      if (this.onClose && _.isFunction(this.onClose)) {
-        this.onClose();
-      }
-      if (this.$el) this.undelegateEvents();
-      this.unbind();
-      this.remove();
-    }
-  });
-
   // Backform Form view
   // A collection of field models.
-  var Form = Backform.Form = Backform.View.extend({
+  var Form = Backform.Form = Backbone.View.extend({
     fields: undefined,
     errorModel: undefined,
     tagName: "form",
@@ -111,21 +87,27 @@
         options.fields = new Fields(options.fields || this.fields);
       this.fields = options.fields;
       this.model.errorModel = options.errorModel || this.model.errorModel || new Backbone.Model();
+      this.controls = [];
+    },
+    cleanup: function() {
+      _.each(this.controls, function(c) {
+        c.remove();
+      });
+      this.controls.length = 0;
+    },
+    remove: function() {
+      /* First do the clean up */
+      this.cleanup();
+      Backbone.View.prototype.remove.apply(this, arguments);
     },
     render: function() {
-      if (this.controls) {
-        _.each(this.controls, function(c) {
-          c.close();
-          delete c;
-        });
-        this.controls = undefined;
-      }
-      this.controls = [];
+      this.cleanup();
       this.$el.empty();
 
       var form = this,
           $form = this.$el,
-          model = this.model;
+          model = this.model,
+          controls = this.controls;
 
       this.fields.each(function(field) {
         var control = new (field.get("control"))({
@@ -133,19 +115,10 @@
           model: model
         });
         $form.append(control.render().$el);
-        this.controls.push(control);
+        controls.push(control);
       });
 
       return this;
-    },
-    onClose: function() {
-      this.fields.each(function(field) {
-          field.unbind();
-      });
-      this.fields.unbind();
-      this.fields.remove();
-      delete this.fields;
-      this.fields = undefined;
     }
   });
 
@@ -232,7 +205,7 @@
   });
 
   // Base Control class
-  var Control = Backform.Control = Backform.View.extend({
+  var Control = Backform.Control = Backbone.View.extend({
     defaults: {}, // Additional field defaults
     className: function() {
       return Backform.groupClassName;
@@ -315,23 +288,25 @@
       return this;
     },
     updateInvalid: function() {
+      var self = this;
       var errorModel = this.model.errorModel;
       if (!(errorModel instanceof Backbone.Model)) return this;
 
       this.clearInvalid();
 
-      var attrArr = this.field.get('name').split('.'),
+      this.$el.find(':input').not('button').each(function(ix, el) {
+        var attrArr = $(el).attr('name').split('.'),
           name = attrArr.shift(),
           path = attrArr.join('.'),
-          error = errorModel.get(name);
+          error = self.keyPathAccessor(errorModel.toJSON(), $(el).attr('name'));
 
-      if (_.isEmpty(error)) return;
-      if (_.isObject(error)) error = this.keyPathAccessor(error, path);
-      if (_.isEmpty(error)) return;
+        if (_.isEmpty(error)) return;
+        if (_.isEmpty(error)) return;
 
-      this.$el.addClass(Backform.errorClassName);
-      this.$el.find("." + Backform.controlsClassName)
-        .append('<span class="' + Backform.helpClassName + ' error">' + (_.isArray(error) ? error.join(", ") : error) + '</span>');
+        self.$el.addClass(Backform.errorClassName);
+        self.$el.find("." + Backform.controlsClassName)
+          .append('<span class="' + Backform.helpClassName + ' error">' + (_.isArray(error) ? error.join(", ") : error) + '</span>');
+      });
 
       return this;
     },
@@ -352,13 +327,6 @@
         obj = obj[path.shift()];
       }
       return obj[path.shift()] = value;
-    },
-    onClose: function() {
-      this.stopListening(this.model, "change:" + name);
-      if (this.model.errorModel instanceof Backbone.Model) {
-        this.stopListening(this.model.errorModel, "change:" + name);
-      }
-      this.field.unbind();
     }
   });
 
@@ -434,7 +402,8 @@
     }
   });
 
-  var MultiSelectControl = Backform.MultiSelectControl = Control.extend({
+  // Note: Value here is null or an array. Since jQuery val() returns either.
+  var MultiSelectControl = Backform.MultiSelectControl = SelectControl.extend({
     defaults: {
       label: "",
       options: [], // List of options as [{label:<label>, value:<value>}, ...]
@@ -444,10 +413,10 @@
     template: _.template([
       '<label class="<%=Backform.controlLabelClassName%>"><%=label%></label>',
       '<div class="<%=Backform.controlsClassName%>">',
-      '  <select multiple="multiple" class="<%=Backform.controlClassName%> <%=extraClasses.join(\' \')%>" name="<%=name%>" value="<%-value%>" <%=disabled ? "disabled" : ""%> <%=required ? "required" : ""%> style="height:<%=height%>">',
+      '  <select multiple="multiple" class="<%=Backform.controlClassName%> <%=extraClasses.join(\' \')%>" name="<%=name%>" value="<%-JSON.stringify(value)%>" <%=disabled ? "disabled" : ""%> <%=required ? "required" : ""%> style="height:<%=height%>">',
       '    <% for (var i=0; i < options.length; i++) { %>',
       '      <% var option = options[i]; %>',
-      '      <option value="<%-option.value%>"" <%=option.value == rawValue ? "selected=\'selected\'" : ""%> <%=option.disabled ? "disabled=\'disabled\'" : ""%>><%-option.label%></option>',
+      '      <option value="<%-option.value%>" <%=value != null && _.indexOf(value, option.value) != -1 ? "selected=\'selected\'" : ""%> <%=option.disabled ? "disabled=\'disabled\'" : ""%>><%-option.label%></option>',
       '    <% } %>',
       '  </select>',
       '</div>'
@@ -457,9 +426,13 @@
       "dblclick select": "onDoubleClick",
       "focus select": "clearInvalid"
     },
-    formatter: JSONFormatter,
-    getValueFromDOM: function() {
-      return this.$el.find("select").val();
+    formatter: {
+      fromRaw: function(rawData, model) {
+        return rawData;
+      },
+      toRaw: function(formattedData, model) {
+        return typeof formattedData == "object" ? formattedData : JSON.parse(formattedData);
+      }
     },
     onDoubleClick: function(e) {
       this.model.trigger('doubleclick', e);

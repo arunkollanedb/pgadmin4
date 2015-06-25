@@ -61,10 +61,9 @@
 
   // Backform Dialog view (in bootstrap tabbular form)
   // A collection of field models.
-  var Dialog = Backform.Dialog = Backform.View.extend({
+  var Dialog = Backform.Dialog = Backform.Form.extend({
     /* Array of objects having attributes [label, fields] */
     schema: undefined,
-    errorModel: undefined,
     tagName: "form",
     className: function() {
       return 'col-sm-12 col-md-12 col-lg-12 col-xs-12';
@@ -81,6 +80,7 @@
         });
       }
       this.model.errorModel = opts.errorModel || this.model.errorModel || new Backbone.Model();
+      this.controls = [];
     },
     template: {
       'header': _.template([
@@ -92,36 +92,30 @@
         '<div role="tabpanel" class="tab-pane col-sm-12 col-md-12 col-lg-12 col-xs-12 fade" id="<%=cId%>" aria-labelledby="<%=hId%>"></div>'
       )},
     render: function() {
-      var c = 
-        this.$el
-          .children().first().children('.active')
-          .first().attr('id'),
+      this.cleanup();
+
+      var c = this.$el
+        .children().first().children('.active')
+        .first().attr('id'),
         m = this.model,
-        obj = this;
+        controls = this.controls,
+        tmpls = this.template;
 
-      if (obj.controls && _.isArray(obj.controls)) {
-          _.each(obj.controls, function(c) {
-              c.close();
-              delete c;
-          });
-      }
-      obj.controls = [];
-
-      obj.$el
+      this.$el
           .empty()
           .attr('role', 'tabpanel')
           .attr('class', Backform.tabClassName);
 
       var tabHead = $('<ul class="nav nav-tabs" role="tablist"></ul>')
-        .appendTo(obj.$el);
+        .appendTo(this.$el);
       var tabContent = $('<ul class="tab-content col-sm-12 col-md-12 col-lg-12 col-xs-12"></ul>')
-        .appendTo(obj.$el);
+        .appendTo(this.$el);
 
-      _.each(obj.schema, function(o) {
-        var el = $((obj.template['panel'])(o))
+      _.each(this.schema, function(o) {
+        var el = $((tmpls['panel'])(o))
               .appendTo(tabContent)
               .removeClass('collapse').addClass('collapse'),
-            h = $((obj.template['header'])(o)).appendTo(tabHead);
+            h = $((tmpls['header'])(o)).appendTo(tabHead);
 
         o.fields.each(function(f) {
           var cntr = new (f.get("control")) ({
@@ -129,7 +123,7 @@
             model: m
           });
           el.append(cntr.render().$el);
-          obj.controls.push(cntr);
+          controls.push(cntr);
         });
       });
 
@@ -144,18 +138,6 @@
       }
 
       return this;
-    },
-    onClose: function() {
-
-      _.each(this.schema, function(o) {
-          o.fields.each(function(f) {
-              f.unbind();
-          });
-          o.fields.unbind();
-          o.fields.remove();
-          delete o.fields;
-          o.fields = undefined;
-      });
     }
   });
 
@@ -171,26 +153,21 @@
         '  <div id="<%= cId %>" class="<%=Backform.setGroupContentClassName%> collapse in"></div>'
     )},
     render: function() {
+      this.cleanup();
+
       var m = this.model,
-        obj = this;
+          $el = this.$el,
+          tmpl = this.template,
+          controls = this.controls;
 
-      if (this.controls && _.isArray(this.controls)) {
-        _.each(this.controls, function(c) {
-          c.close();
-          delete c;
-        });
-      }
-      this.controls = [];
-      var c = this.controls;
-
-      obj.$el.empty();
+      this.$el.empty();
 
       _.each(this.schema, function(o) {
         if (!o.fields)
           return;
 
-        var h = $((obj.template['header'])(o)).appendTo(obj.$el), 
-          el = $((obj.template['content'])(o))
+        var h = $((tmpl['header'])(o)).appendTo($el),
+          el = $((tmpl['content'])(o))
               .appendTo(h);
 
         o.fields.each(function(f) {
@@ -199,7 +176,7 @@
             model: m
           });
           el.append(cntr.render().$el);
-          c.push(cntr);
+          controls.push(cntr);
         });
       });
 

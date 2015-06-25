@@ -356,7 +356,7 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                         // creating new view.
                         if (view) {
                             // Release the view
-                            view.close();
+                            view.remove();
                             // Deallocate the view
                             delete view;
                             view = null;
@@ -636,6 +636,8 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                                 // Create the actual button, and append to
                                 // the group div
                                 var b = $(tmpl(btn));
+                                if (btn.title && btn.title != '')
+                                    b.attr('title', btn.title);
                                 btnGroup.append(b);
                                 // Register is a callback to set callback
                                 // for certain operatio for this button.
@@ -651,7 +653,7 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                         // creating new view.
                         if (view) {
                             // Release the view
-                            view.close();
+                            view.remove();
                             // Deallocate the view
                             delete view;
                             view = null;
@@ -672,6 +674,7 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                             // Create the buttons now.
                             createButtons([{
                                 label: '{{ _('Save') }}', type: 'save',
+                                title: 'Save and close the panel',
                                 extraClasses: ['btn-primary'],
                                 register: function(btn) {
                                     // Create a new node on clicking this
@@ -816,7 +819,7 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                     // creating new view.
                     if (view) {
                         // Release the view
-                        view.close();
+                        view.remove();
                         // Deallocate the view
                         delete view;
                         view = null;
@@ -848,7 +851,7 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                     // creating the new view.
                     if (view) {
                         // Release the view
-                        view.close();
+                        view.remove();
                         // Deallocate the view
                         delete view;
                         view = null;
@@ -892,7 +895,7 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                                 });
                             }
                         },{
-                            label: '{{ _("Cancel") }}', type: 'cancel',
+                            label: '{{ _('Cancel') }}', type: 'cancel',
                             extraClasses: ['btn-danger'],
                             register: function(btn) {
                                 btn.click(function() {
