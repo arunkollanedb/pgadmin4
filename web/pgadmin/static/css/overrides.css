@@ -127,6 +127,17 @@ iframe {
     border-radius:6px 0 6px 6px;
 }
 
+.navbar-inverse .navbar-brand,
+.navbar-inverse > li > a,
+.navbar-inverse .navbar-nav > li > a {
+    color: #CACACA;
+}
+
+.dropdown-menu > hr {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
 .form-group fieldset {
     background-color: #F2F2F2;
     padding: 0px 0px 0px 5px;

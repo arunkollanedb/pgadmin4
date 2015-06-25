@@ -35,43 +35,44 @@ try {
 
         <li id="mnu_file" class="dropdown hide">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{ _('File') }} <span class="caret"></span></a>
-          <ul class="dropdown-menu" role="menu"></ul>
+          <ul class="dropdown-menu navbar-inverse" role="menu"></ul>
         </li>
         <li id="mnu_edit" class="dropdown hide">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{ _('Edit') }} <span class="caret"></span></a>
-          <ul class="dropdown-menu" role="menu"></ul>
+          <ul class="dropdown-menu navbar-inverse" role="menu"></ul>
         </li>
         <li id="mnu_obj" class="dropdown hide">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{ _('Object') }} <span class="caret"></span></a>
-          <ul id="mnu_dropdown_obj" class="dropdown-menu" role="menu">
+          <ul id="mnu_dropdown_obj" class="dropdown-menu navbar-inverse" role="menu">
             <li id="mnu_create_dropdown_obj" class="menu-item dropdown dropdown-submenu">
               <a href="#" class="dropdown-toggle" data-toggle="dropdown">Create</a>
-              <ul id="mnu_create_obj" class="dropdown-menu">
+              <ul id="mnu_create_obj" class="dropdown-menu navbar-inverse">
                 <li class="menu-item">
                   <a href="#">Link 1</a>
                 </li>
               </ul>
             </li>
+            <hr/>
           </ul>
         </li>
         <li id="mnu_management" class="dropdown hide">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{ _('Management') }} <span class="caret"></span></a>
-          <ul class="dropdown-menu" role="menu"></ul>
+          <ul class="dropdown-menu navbar-inverse" role="menu"></ul>
         </li>
         <li id="mnu_tools" class="dropdown hide">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{ _('Tools') }} <span class="caret"></span></a>
-          <ul class="dropdown-menu" role="menu"></ul>
+          <ul class="dropdown-menu navbar-inverse" role="menu"></ul>
         </li>
         <li id="mnu_help" class="dropdown hide">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">{{ _('Help') }} <span class="caret"></span></a>
-          <ul class="dropdown-menu" role="menu"></ul>
+          <ul class="dropdown-menu navbar-inverse" role="menu"></ul>
         </li>
       </ul>
       {% if config.SERVER_MODE %}
       <ul class="nav navbar-nav navbar-right">
         <li class="dropdown">
           <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><img src="{{ username | gravatar }}" width="18" height="18" alt="Gravatar image for {{ username }}"> {{ username }} <span class="caret"></span></a>
-          <ul class="dropdown-menu">
+          <ul class="dropdown-menu navbar-inverse">
             <li><a href="{{ url_for('security.change_password') }}">{{ _('Change Password') }}</a></li>
             <li class="divider"></li>
             <li><a href="{{ url_for('security.logout') }}">{{ _('Logout') }}</a></li>
