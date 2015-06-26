@@ -16,25 +16,19 @@ function($, _, pgAdmin, Backbone) {
 
         pgAdmin.Browser.add_menus([{
           name: 'create_server_group', node: 'server-group', module: this,
-          applies: ['object', 'context'], callback: 'create_obj',
+          applies: ['object', 'context'], callback: 'show_obj_properties',
           category: 'create', priority: 1, label: '{{ _('Server Group...') }}',
-          icon: 'wcTabIcon icon-server-group'
-        }, {
-          name: 'create_server_group_dlg', node: 'server-group', module: this,
-          applies: ['object', 'context'], callback: 'create_obj_dlg',
-          category: 'create', priority: 2, label: '{{ _('Server Group (Dialog)...') }}',
-          icon: 'wcTabIcon icon-server-group'
-        }, {
-        }, {
+          data: {'action': 'create'}, icon: 'wcTabIcon icon-server-group'
+        },{
           name: 'edit_server_group', node: 'server-group', module: this,
-          applies: ['object', 'context'], callback: 'edit_obj',
-          priority: 3, label: '{{ _('Edit...') }}',
-          icon: 'fa fa-lg fa-pencil-square-o'
+          applies: ['object', 'context'], callback: 'show_obj_properties',
+          priority: 3, label: '{{ _('Edit...') }}', data: {'action': 'edit'},
+          icon: 'fa fa-pencil-square-o'
         }, {
           name: 'drop_server_group', node: 'server-group', module: this,
           applies: ['object', 'context'], callback: 'delete_obj',
           priority: 2, label: '{{ _('Drop Server Group...') }}',
-          icon: 'fa fa-lg fa-trash'
+          icon: 'fa fa-trash'
         }]);
       },
       model: pgAdmin.Browser.Node.Model.extend({

@@ -339,11 +339,18 @@ iframe {
     left: 0px;
     right: 0px;
     top: 0px;
-    padding: 3px 7px 3px 3px;
+    padding: 0px 7px;
 }
 
 .pg-prop-btn-group button {
-    margin: 5px;
+    margin-right: 5px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    margin-left: 5px;
+}
+
+.pg-prop-btn-group button:not(:first-child):not(:last-child) {
+    margin: 0px;
 }
 
 .pg-prop-content {
@@ -359,7 +366,7 @@ iframe {
 }
 
 .has-pg-prop-btn-group {
-    top: 3em;
+    top: 2.5em;
 }
 
 

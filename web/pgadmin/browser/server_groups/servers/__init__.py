@@ -7,7 +7,7 @@
 #
 ##########################################################################
 import json
-from flask import render_template, request, make_response
+from flask import render_template, request, make_response, jsonify
 from flask.ext.security import login_required, current_user
 from pgadmin.settings.settings_model import db, Server, ServerGroup
 from pgadmin.utils.menu import MenuItem
@@ -98,21 +98,22 @@ class ServerNode(NodeView):
 
         for server in servers:
             res.append(
-                self.generate_browser_node(
+                generate_browser_node(
                     "%s" % server.id,
                     "%s" % gid,
                     server.name,
-                    "icon-%s-not-connected" % ServerModule.node_type,
-                    True)
+                    "icon-%s-not-connected" % ServerModule.NODE_TYPE,
+                    True,
+                    ServerModule.NODE_TYPE)
             )
         return make_json_response(result=res)
 
     def delete(self, gid, sid):
         """Delete a server node in the settings database"""
-        server = Server.query.filter_by(user_id=current_user.id, id=sid)
+        servers = Server.query.filter_by(user_id=current_user.id, id=sid)
 
         # TODO:: A server, which is connected, can not be deleted
-        if server is None:
+        if servers is None:
             return make_json_response(
                 success=0,
                 errormsg=gettext(
@@ -123,14 +124,15 @@ class ServerNode(NodeView):
             )
         else:
             try:
-                db.session.delete(server)
+                for s in servers:
+                    db.session.delete(s)
                 db.session.commit()
             except Exception as e:
                 return make_json_response(
                     success=0,
                     errormsg=e.message)
 
-        return make_json_response(success=0,
+        return make_json_response(success=1,
                                   info=traceback.format_exc())
 
     def update(self, gid, sid):
@@ -255,12 +257,14 @@ class ServerNode(NodeView):
             db.session.add(server)
             db.session.commit()
 
-            return make_json_response(success=1,
-                                      data={
-                                          'id': server.id,
-                                          'name': server.name,
-                                          'gid': gid
-                                      })
+            return jsonify(node=generate_browser_node(
+                '%s' % server.id,
+                '%s' % gid,
+                '%s' % server.name,
+                "icon-{0}-not-connected".format(ServerModule.NODE_TYPE),
+                True,
+                ServerModule.NODE_TYPE))
+
         except Exception as e:
             return make_json_response(
                 status=410,

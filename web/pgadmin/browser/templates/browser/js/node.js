@@ -83,7 +83,7 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
         // Label
         label: '',
         title: function(d) {
-            return d.label;
+            return d ? d.label : '';
         },
         ///////
         // Initialization function
@@ -98,10 +98,10 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
             this.node_initialized = true;
 
             pgAdmin.Browser.add_menus([{
-                name: 'show_node_properties', node: this.type, module: this,
+                name: 'show_obj_properties', node: this.type, module: this,
                 applies: ['object', 'context'], callback: 'show_obj_properties',
                 priority: 3, label: '{{ _("Properties...") }}',
-                icon: 'fa fa-lg fa-th-list'
+                data: {'action': 'properties'}, icon: 'fa fa-th-list'
             }]);
         },
         ///////
@@ -243,7 +243,7 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
             p = new pgBrowser.Panel({
                     name: 'node_props',
                     showTitle: true,
-                    isCloseable: true,
+                    isCloseable: false,
                     isPrivate: false,
                     content: '<div class="obj_properties">No object selected!</div>'
                 });
@@ -252,295 +252,133 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
         // List of common callbacks - that can be used for different
         // operations!
         callbacks: {
-            // Create a object of this type
-            create_obj: function(item) {
+            /******************************************************************
+             * This function allows to create/edit/show properties of any
+             * object depending on the arguments provided.
+             *
+             * args must be a object containing:
+             *   action - create/edit/properties
+             *   item   - The properties of the item (tree ndoe item)
+             *
+             * NOTE:
+             * if item is not provided, the action will be done on the
+             * currently selected tree item node.
+             *
+             **/
+            show_obj_properties: function(args) {
                 var t = pgBrowser.tree,
-                    i = item || t.selected(),
-                    d = i && i.length == 1 ? t.itemData(i) : undefined;
+                    i = args.item || t.selected(),
+                    d = i && i.length == 1 ? t.itemData(i) : undefined
+                    o = this,
+                    l = o.title(d);
 
-                // If we've parent, we will get the information of it for
-                // proper object manipulation.
-                //
-                // You know - we're working with RDBMS, relation is everything
-                // for us.
-                if (this.parent_type && this.parent_type != d._type) {
-                    // In browser tree, I can be under any node, But - that
-                    // does not mean, it is my parent.
-                    //
-                    // We have some group nodes too.
-                    //
-                    // i.e.
-                    // Tables, Views, etc. nodes under Schema node
-                    //
-                    // And, actual parent of a table is schema, not Tables.
-                    while (i && t.hasParent(i)) {
-                        i = t.parent(i);
-                        pd = t.itemData(i);
+                // Make sure - the properties dialog type registered
+                pgBrowser.Node.register_node_panel();
 
-                        if (this.parent_type == pd._type) {
-                            // Assign the data, this is my actual parent.
-                            d = pd;
-                            break;
+                if (args.action == 'create') {
+                    // If we've parent, we will get the information of it for
+                    // proper object manipulation.
+                    //
+                    // You know - we're working with RDBMS, relation is everything
+                    // for us.
+                    if (this.parent_type && this.parent_type != d._type) {
+                        // In browser tree, I can be under any node, But - that
+                        // does not mean, it is my parent.
+                        //
+                        // We have some group nodes too.
+                        //
+                        // i.e.
+                        // Tables, Views, etc. nodes under Schema node
+                        //
+                        // And, actual parent of a table is schema, not Tables.
+                        while (i && t.hasParent(i)) {
+                            i = t.parent(i);
+                            pd = t.itemData(i);
+
+                            if (this.parent_type == pd._type) {
+                                // Assign the data, this is my actual parent.
+                                d = pd;
+                                break;
+                            }
                         }
+                    }
+
+                    // Seriously - I really don't have parent data present?
+                    //
+                    // The only node - which I know - who does not have parent
+                    // node, is the Server Group (and, comes directly under root
+                    // node - which has no parent.)
+                    if (!d || (d._type != this.parent_type &&
+                                this.parent_type != null)) {
+                        // It should never come here.
+                        // If it is here, that means - we do have some bug in code.
+                        return;
+                    }
+
+                    if (!d)
+                        return;
+
+                    l = S('{{ _("Create - %%s") }}').sprintf(
+                            [this.label]).value();
+                    p = pgBrowser.docker.addPanel('node_props',
+                            wcDocker.DOCK_FLOAT, undefined,
+                            {w: '500', h: '400'});
+                    setTimeout(function() {
+                        o.showProperties(i, d, p, args.action);
+                    }, 10);
+                } else {
+                    if (pgBrowser.Node.panels && pgBrowser.Node.panels[d.id] &&
+                            pgBrowser.Node.panels[d.id].$container) {
+                        p = pgBrowser.Node.panels[d.id];
+                        /**  TODO ::
+                         *  Run in edit mode (if asked) only when it is
+                         *  not already been running edit mode
+                         **/
+                        var mode = p.$container.attr('action-mode');
+                        if (mode) {
+                            var msg = '{{ _('Are you sure wish to stop editing the properties of the %%s - "%%s"?') }}';
+                            if (args.action == 'edit') {
+                                msg = '{{ _('Are you sure wish to reset the current changes, and reopen the panel for %%s = "%%s"?') }}';
+                            }
+
+                            Alertify.confirm(
+                                '{{ _('Edit in progress?') }}',
+                                S(msg).sprintf(o.label, d.label).value(),
+                                function() {
+                                    setTimeout(function() {
+                                        o.showProperties(i, d, p, args.action);
+                                    }, 10);
+                                },
+                                null).show();
+                        } else {
+                            setTimeout(function() {
+                                o.showProperties(i, d, p, args.action);
+                            }, 10);
+                        }
+                    } else {
+                        p = pgBrowser.docker.addPanel('node_props',
+                                wcDocker.DOCK_FLOAT, undefined,
+                                {w: '500', h: '400'});
+                        pgBrowser.Node.panels = pgBrowser.Node.panels || {};
+                        pgBrowser.Node.panels[d.id] = p;
+
+                        setTimeout(function() {
+                            o.showProperties(i, d, p, args.action);
+                        }, 10);
                     }
                 }
 
-                // Seriously - I really don't have parent data present?
-                //
-                // The only node - which I know - who does not have parent
-                // node, is the Server Group (and, comes directly under root
-                // node - which has no data.)
-                if (!d || (d._type != this.parent_type && this.parent_type != null)) {
-                    // It should never come here.
-                    // If it is here, that means - we do have some bug in code.
-                    return;
-                }
-
-                if (!d)
-                    return;
-
-                // Make sure - the properties dialog open
-                pgBrowser.Node.register_node_panel();
-
-                p = pgBrowser.docker.addPanel('node_props', wcDocker.DOCK_FLOAT,
-                        pgBrowser.panels['properties'].panel);
-
-                p.title(S('{{ _("Create - %%s") }}').sprintf([
-                            this.label]).value());
+                p.title(l);
                 p.icon('icon-' + this.type);
 
                 // Make sure the properties dialog is visible
                 p.focus();
-
-                var that = this,
-                    j = p.$container.find('.obj_properties').first(),
-                    // In order to release the memory allocated to the view, we need
-                    // to keep the view object in this panel.
-                    view = j.data('obj-view'),
-                    // This is where, we will keep the properties
-                    // fieldsets.
-                    content = $('<div></div>').addClass('has-pg-prop-btn-group pg-prop-content col-xs-12'),
-                    // Template function to create the buttons-set.
-                    createButtons = function(buttons) {
-                        // arguments must be non-zero length array of type
-                        // object, which contains following attributes:
-                        // label, type, extraClasses, register
-                        if (buttons && _.isArray(buttons) && buttons.length > 0) {
-                            // All buttons will be created within a single
-                            // div area.
-                            var btnGroup =
-                                $('<div></div>').addClass(
-                                    'pg-prop-btn-group col-xs-12'
-                                    ).appendTo(j),
-                                // Template used for creating a button
-                                tmpl = _.template([
-                                    '<button type="<%=type%>"',
-                                    'class="btn <%=extraClasses.join(\' \')%>"',
-                                    '><%-label%></button>'
-                                    ].join(' '));
-                            _.each(buttons, function(btn) {
-                                // Create the actual button, and append to
-                                // the group div
-                                var b = $(tmpl(btn));
-                                btnGroup.append(b);
-                                // Register is a callback to set callback
-                                // for certain operatio for this button.
-                                btn.register(b);
-                            });
-                            return btnGroup;
-                        }
-                        return null;
-                    },
-                    // Function to create the object of this type
-                    createFunc = function() {
-                        // We need to release any existing view, before
-                        // creating new view.
-                        if (view) {
-                            // Release the view
-                            view.remove();
-                            // Deallocate the view
-                            delete view;
-                            view = null;
-                            // Reset the data object
-                            j.data('obj-view', null);
-                        }
-                        // Make sure - nothing is displayed now
-                        j.empty();
-                        // Generate a view for creating the node in
-                        // properties tab.
-                        view = that.getView('create', content, d, 'fieldset');
-
-                        // Did we get success to generate the view?
-                        if (view) {
-                            // Save it to release it later.
-                            j.data('obj-view', view);
-
-                            // Create the buttons now.
-                            createButtons([{
-                                label: '{{ _('Save') }}', type: 'save',
-                                extraClasses: ['btn-primary'],
-                                register: function(btn) {
-                                    // Create a new node on clicking this
-                                    // button
-                                    btn.click(function() {
-                                        var m = view.model;
-                                        if (m.changed &&
-                                            !_.isEmpty(m.changed)) {
-                                            // Create the object by calling
-                                            // model.save()
-                                            m.save({} ,{
-                                                success: function(model, response) {
-                                                    /* TODO:: Add this node to the tree */
-                                                    alert('{{ _('Show this object in the browser tree and select it!') }} ');
-                                                },
-                                                error: function() {
-                                                    /* TODO:: Alert for the user on error */
-                                                    console.log('{{ _('ERROR:') }}');
-                                                    console.log(arguments);
-                                                }
-                                                });
-                                        }
-                                    });
-                                }
-                            },{
-                                label: '{{ _('Cancel') }}', type: 'cancel',
-                                extraClasses: ['btn-danger'],
-                                register: function(btn) {
-                                    btn.click(function() {
-                                        /* TODO:: Show properties of the current selected object */
-                                        alert('{{ _('show properties of selected node') }}');
-                                    });
-                                }
-                            },{
-                                label: '{{ _('Reset') }}', type: 'reset',
-                                extraClasses: ['btn-warning'],
-                                register: function(btn) {
-                                    btn.click(function() {
-                                        // Reset the content
-                                        setTimeout(function() { createFunc(); }, 100);
-                                    });
-                                }
-                            }])
-                        }
-                        j.append(content);
-                    };
-
-                // Call the createFunc(...) by default to open the create
-                // node fieldset in new node_props tab.
-                createFunc();
-            },
-            // Create the node in the alertify dialog
-            create_obj_dlg: function(item) {
-                var t = pgBrowser.tree,
-                    i = item || t.selected(),
-                    d = i && i.length == 1 ? t.itemData(i) : undefined;
-
-                // If we've parent, we will get the information of it for
-                // proper object manipulation.
-                //
-                // You know - we're working with RDBMS, relation is everything
-                // for us.
-                if (this.parent_type && this.parent_type != d._type) {
-                    // In browser tree, I can be under any node, But - that
-                    // does not mean, it is my parent.
-                    //
-                    // We have some group nodes too.
-                    //
-                    // i.e.
-                    // Tables, Views, etc. nodes under Schema node
-                    //
-                    // And, actual parent of a table is schema, not Tables.
-                    while (i && t.hasParent(i)) {
-                        i = t.parent(i);
-                        pd = t.itemData(i);
-
-                        if (this.parent_type == pd._type) {
-                            // Assign the data, this is my actual parent.
-                            d = pd;
-                            break;
-                        }
-                    }
-                }
-
-                // Seriously - I really don't have parent data present?
-                //
-                // The only node - which I know - who does not have parent
-                // node, is the Server Group (and, comes directly under root
-                // node - which has no data.)
-                if (!d || (d._type != this.parent_type && this.parent_type != null)) {
-                    // It should never come here.
-                    // If it is here, that means - we do have some bug in code.
-                    return;
-                }
-
-                if (!d)
-                    return;
-
-                var that = this,
-                    content = $('<div></div>').addClass('has-pg-prop-btn-group pg-prop-content col-xs-12'),
-                    cb = function(v) {
-                        // Create the dialog
-                        Alertify.dlgNode || Alertify.dialog('dlgNode',
-                            function factory() {
-                                return {
-                                    main: function(title, message, data) {
-                                        this.set('title', title);
-                                        this.message = message;
-                                    },
-                                    setup: function() {
-                                        return {
-                                            buttons:[
-                                                { text: "{{ _('OK') }}", key: 13, className: "btn btn-primary"},
-                                                { text: "{{ _('Cancel') }}", key: 27, className: "btn btn-danger"}],
-                                            options: { modal: 0, title: this.title, resizeable: 0 }
-                                        };
-                                    },
-                                    prepare: function() {
-                                        this.setContent(this.message);
-                                    },
-                                    callback: function(ev) {
-                                        console.log(ev);
-                                    }
-                                };
-                            }, true);
-                        dlg = Alertify.dlgNode(S('{{ _("Create %%s") }}').sprintf(that.label), content[0]);
-
-                        // TODO:: Fetch height, width for each dialog
-                        // content is not loaded in the document, hence - it does not
-                        // give reliable values for width, height
-                        dlg.resizeTo(350, 550);
-                    },
-                    view = that.getView('create', content, d, 'tab', cb);
-            },
-            show_obj_properties: function() {
-                var t = pgBrowser.tree,
-                    i = t.selected(),
-                    d = i && i.length == 1 ? t.itemData(i) : undefined
-                    o = this;
-
-                // Make sure - the node_props panel type registered
-                pgBrowser.Node.register_node_panel();
-
-                if (pgBrowser.Node.panels && pgBrowser.Node.panels[d.id] &&
-                        pgBrowser.Node.panels[d.id].$container) {
-                    p = pgBrowser.Node.panels[d.id];
-                } else {
-                    p = pgBrowser.docker.addPanel('node_props', wcDocker.DOCK_FLOAT,
-                            pgBrowser.panels['properties'].panel);
-                    p.title(o.title(d));
-                    p.icon('icon-' + this.type);
-                    pgBrowser.Node.panels = pgBrowser.Node.panels || {};
-                    pgBrowser.Node.panels[d.id] = p;
-                    o.showProperties(t, i, d,
-                        p.$container.find('.obj_properties').first());
-                }
-                p.focus();
             },
             // Delete the selected object
-            delete_obj: function() {
+            delete_obj: function(item, data) {
                 var obj = this,
                     t = pgBrowser.tree,
-                    i = t.selected(),
+                    i = item || t.selected(),
                     d = i && i.length == 1 ? t.itemData(i) : undefined;
 
                 if (!d)
@@ -556,7 +394,7 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                                 type:'DELETE',
                                 success: function(res) {
                                     if (res.success == 0) {
-                                        report_error(res.errormsg, res.info);
+                                        pgBrowser.report_error(res.errormsg, res.info);
                                     } else {
                                         var n = t.next(i);
                                         if (!n || !n.length)
@@ -586,146 +424,6 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                         },
                         null).show()
             },
-            // Edit the object properties
-            edit_obj: function() {
-                var t = pgBrowser.tree,
-                    i = t.selected(),
-                    d = i && i.length == 1 ? t.itemData(i) : undefined;
-
-                if (!d)
-                    return;
-
-                // Make sure - the properties dialog open
-                pgBrowser.Node.register_node_panel();
-
-                p = pgBrowser.docker.addPanel('node_props',
-                        wcDocker.DOCK_FLOAT);
-                p.title(S('%s - %s').sprintf(this.label, d.label).value());
-                p.icon('icon-' + this.type);
-
-                // Make sure the properties dialog is visible
-                p.focus();
-
-                var that = this,
-                    j = p.$container.find('.obj_properties').first(),
-                    // In order to release the memory allocated to the view, we need
-                    // to keep the view object in this panel.
-                    view = j.data('obj-view'),
-                    // This is where, we will keep the properties
-                    // fieldsets.
-                    content = $('<div></div>').addClass('has-pg-prop-btn-group pg-prop-content col-xs-12'),
-                    // Template function to create the buttons-set.
-                    createButtons = function(buttons) {
-                        // arguments must be non-zero length array of type
-                        // object, which contains following attributes:
-                        // label, type, extraClasses, register
-                        if (buttons && _.isArray(buttons) && buttons.length > 0) {
-                            // All buttons will be created within a single
-                            // div area.
-                            var btnGroup =
-                                $('<div></div>').addClass(
-                                    'pg-prop-btn-group col-xs-12'
-                                    ).appendTo(j),
-                                // Template used for creating a button
-                                tmpl = _.template([
-                                    '<button type="<%=type%>"',
-                                    'class="btn <%=extraClasses.join(\' \')%>"',
-                                    '><%-label%></button>'
-                                    ].join(' '));
-                            _.each(buttons, function(btn) {
-                                // Create the actual button, and append to
-                                // the group div
-                                var b = $(tmpl(btn));
-                                if (btn.title && btn.title != '')
-                                    b.attr('title', btn.title);
-                                btnGroup.append(b);
-                                // Register is a callback to set callback
-                                // for certain operatio for this button.
-                                btn.register(b);
-                            });
-                            return btnGroup;
-                        }
-                        return null;
-                    },
-                    // Function to create the object of this type
-                    editFunc = function() {
-                        // We need to release any existing view, before
-                        // creating new view.
-                        if (view) {
-                            // Release the view
-                            view.remove();
-                            // Deallocate the view
-                            delete view;
-                            view = null;
-                            // Reset the data object
-                            j.data('obj-view', null);
-                        }
-                        // Make sure - nothing is displayed now
-                        j.empty();
-                        // Generate a view for creating the node in
-                        // properties tab.
-                        view = that.getView('edit', content, d, 'fieldset');
-
-                        // Did we get success to generate the view?
-                        if (view) {
-                            // Save it to release it later.
-                            j.data('obj-view', view);
-
-                            // Create the buttons now.
-                            createButtons([{
-                                label: '{{ _('Save') }}', type: 'save',
-                                title: 'Save and close the panel',
-                                extraClasses: ['btn-primary'],
-                                register: function(btn) {
-                                    // Create a new node on clicking this
-                                    // button
-                                    btn.click(function() {
-                                        var m = view.model;
-                                        if (m.changed &&
-                                            !_.isEmpty(m.changed)) {
-                                            // Create the object by calling
-                                            // model.save()
-                                            m.save({} ,{
-                                                success: function(model, response) {
-                                                    /* TODO:: Add this node to the tree */
-                                                    alert('{{ _('Show this object in the browser tree and select it!') }} ');
-                                                },
-                                                error: function() {
-                                                    /* TODO:: Alert for the user on error */
-                                                    console.log('{{ _('ERROR:') }}');
-                                                    console.log(arguments);
-                                                }
-                                                });
-                                        }
-                                    });
-                                }
-                            },{
-                                label: '{{ _('Cancel') }}', type: 'cancel',
-                                extraClasses: ['btn-danger'],
-                                register: function(btn) {
-                                    btn.click(function() {
-                                        /* TODO:: Show properties of the current selected object */
-                                        alert('{{ _('show properties of selected node') }}');
-                                    });
-                                }
-                            },{
-                                label: '{{ _('Reset') }}', type: 'reset',
-                                extraClasses: ['btn-warning'],
-                                register: function(btn) {
-                                    btn.click(function() {
-                                        // Reset the content
-                                        setTimeout(function() { editFunc(); }, 100);
-                                    });
-                                }
-                            }])
-                        }
-                        j.append(content);
-                    };
-
-                // Call the editFunc(...) by default to open the create
-                // node fieldset in new node_props tab.
-                editFunc();
-            },
             // Callback called - when a node is selected in browser tree.
             selected: function(o) {
                 // Show (One of these, whose panel is open)
@@ -739,50 +437,58 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                 pgAdmin.Browser.enable_disable_menus.apply(o.browser, [o.item]);
 
                 if (o && o.data && o.browser) {
-                    if ('properties' in o.browser.panels &&
-                            o.browser.panels['properties'] &&
-                            o.browser.panels['properties'].panel &&
-                            o.browser.panels['properties'].panel.isVisible()) {
+                    var br = o.browser;
+                    if ('properties' in br.panels &&
+                            br.panels['properties'] &&
+                            br.panels['properties'].panel &&
+                            br.panels['properties'].panel.isVisible()) {
                         // Show object properties (only when the 'properties' tab
                         // is active).
-                        this.showProperties(o.browser.tree, o.item, o.data,
-                                pgBrowser.panels['properties'].panel
-                                .$container.find('.obj_properties').first());
-                    } else if ('sql' in o.browser.panels &&
-                            o.browser.panels['sql'] &&
-                            o.browser.panels['sql'].panel &&
-                            o.browser.panels['sql'].panel.isVisible()) {
+                        this.showProperties(o.item, o.data,
+                                pgBrowser.panels['properties'].panel);
+                    } else if ('sql' in br.panels &&
+                            br.panels['sql'] &&
+                            br.panels['sql'].panel &&
+                            br.panels['sql'].panel.isVisible()) {
                         // Show reverse engineered query for this object (when
                         // the 'sql' tab is active.)
-                    } else if ('statistics' in o.browser.panels &&
-                            o.browser.panels['statistics'] &&
-                            o.browser.panels['statistics'].panel &&
-                            o.browser.panels['statistics'].panel.isVisible()) {
+                    } else if ('statistics' in br.panels &&
+                            br.panels['statistics'] &&
+                            br.panels['statistics'].panel &&
+                            br.panels['statistics'].panel.isVisible()) {
                         // Show statistics for this object (when the
                         // 'statistics' tab is active.)
-                    } else if ('dependencies' in o.browser.panels &&
-                            o.browser.panels['dependencies'] &&
-                            o.browser.panels['dependencies'].panel &&
-                            o.browser.panels['dependencies'].panel.isVisible()) {
+                    } else if ('dependencies' in br.panels &&
+                            br.panels['dependencies'] &&
+                            br.panels['dependencies'].panel &&
+                            br.panels['dependencies'].panel.isVisible()) {
                         // Show dependencies for this object (when the
                         // 'dependencies' tab is active.)
-                    } else if ('dependents' in o.browser.panels &&
-                            o.browser.panels['dependents'] &&
-                            o.browser.panels['dependents'].panel &&
-                            o.browser.panels['dependents'].panel.isVisible()) {
+                    } else if ('dependents' in br.panels &&
+                            br.panels['dependents'] &&
+                            br.panels['dependents'].panel &&
+                            br.panels['dependents'].panel.isVisible()) {
                         // Show dependents for this object (when the
                         // 'dependents' tab is active.)
                     }
                 }
             }
         },
-        // A hook (not a callback) to show object properties in given HTML
-        // element.
-        showProperties: function(tree, item, node, j) {
+        /**********************************************************************
+         * A hook (not a callback) to show object properties in given HTML
+         * element.
+         *
+         * This has been used for the showing, editing properties of the node.
+         * This has also been used for creating a node.
+         **/
+        showProperties: function(item, data, panel, action) {
             var that = this,
+                tree = pgAdmin.Browser.tree,
+                j = panel.$container.find('.obj_properties').first(),
                 view = j.data('obj-view'),
-                content = $('<div></div>').addClass('has-pg-prop-btn-group pg-prop-content col-xs-12'),
-                // Template function to create the buttons-set.
+                content = $('<div></div>')
+                    .addClass('has-pg-prop-btn-group pg-prop-content col-xs-12'),
+                // Template function to create the button-group
                 createButtons = function(buttons) {
                     // arguments must be non-zero length array of type
                     // object, which contains following attributes:
@@ -792,18 +498,23 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                         // div area.
                         var btnGroup =
                             $('<div></div>').addClass(
-                                'pg-prop-btn-group col-xs-12'
-                                ).appendTo(j),
-                            // Template used for creating a button
-                            tmpl = _.template([
-                                '<btn type="<%= type %>" ',
+                                    'pg-prop-btn-group col-xs-12'
+                                    ).appendTo(j),
+                        // Template used for creating a button
+                        tmpl = _.template([
+                                '<button type="<%= type %>" ',
                                 'class="btn <%=extraClasses.join(\' \')%>">',
-                                '<i class="fa <%= icon %> fa-lg"></i>',
+                                '<i class="<%= icon %>"></i>&nbsp;',
                                 '<%-label%></button>'
                                 ].join(' '));
                         _.each(buttons, function(btn) {
                             // Create the actual button, and append to
                             // the group div
+
+                            // icon may not present for this button
+                            if (!btn.icon) {
+                                btn.icon = "";
+                            }
                             var b = $(tmpl(btn));
                             btnGroup.append(b);
                             // Register is a callback to set callback
@@ -830,25 +541,43 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                     // Make sure the HTML element is empty.
                     j.empty();
                     // Create a view to show the properties in fieldsets
-                    view = that.getView('properties', content, node, 'fieldset');
+                    view = that.getView('properties', content, data, 'fieldset');
                     if (view) {
                         // Save it for release it later
                         j.data('obj-view', view);
                         // Create proper buttons
-                        createButtons([{
+                        var buttons = [];
+                        if (action) {
+                            buttons.push({
+                                label: '{{ _("Close") }}', type: 'close',
+                                extraClasses: ['btn-danger'],
+                                icon: 'fa fa-lg fa-close',
+                                register: function(btn) {
+                                    btn.click(function() {
+                                        closePanel();
+                                    });
+                                }
+                            });
+                        }
+                        buttons.push({
                             label: '{{ _("Edit") }}', type: 'edit',
-                            extraClasses: ['btn-primary'], icon: 'fa-pencil-square-o',
+                            extraClasses: ['btn-primary'],
+                            icon: 'fa fa-lg fa-pencil-square-o',
                             register: function(btn) {
                                 btn.click(function() {
-                                    // editFunc();
-                                    that.callbacks.edit_obj.apply(that);
+                                    onEdit();
                                 });
                             }
-                        }]);
+                        });
+                        createButtons(buttons);
                     }
                     j.append(content);
                 },
                 editFunc = function() {
+                    if (action && action == 'properties') {
+                        action = 'edit';
+                    }
+                    panel.$container.attr('action-mode', action);
                     // We need to release any existing view, before
                     // creating the new view.
                     if (view) {
@@ -862,8 +591,9 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                     }
                     // Make sure the HTML element is empty.
                     j.empty();
-                    // Create a view to edit the properties in fieldsets
-                    view = that.getView('edit', content, node, 'fieldset');
+                    // Create a view to edit/create the properties in fieldsets
+                    view = that.getView(action, content, data, 'fieldset');
+
                     if (view) {
                         // Save it to release it later
                         j.data('obj-view', view);
@@ -871,23 +601,27 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                         createButtons([{
                             label: '{{ _("Save") }}', type: 'save',
                             extraClasses: ['btn-primary'],
+                            icon: 'fa fa-lg fa-save',
                             register: function(btn) {
                                 // Save the changes
                                 btn.click(function() {
-                                    var m = view.model;
-                                    if (m.changed &&
-                                        !_.isEmpty(m.changed)) {
+
+                                    var m = view.model,
+                                        c = m.isNew() ? m.attributes :
+                                            m.changedAttributes();
+
+                                    if (c && !_.isEmpty(c)) {
                                         m.save({} ,{
-                                            attrs: m.changedAttributes(),
-                                            success: function(model, response) {
-                                                // Switch back to show
-                                                // properties mode.
-                                                properties();
-                                                // Update the item lable (if
-                                                // lable is modified.)
-                                                tree.setLabel(item, {label: m.get("name")});
+                                            attrs: (m.isNew() ?
+                                                    m.attributes :
+                                                    m.changedAttributes()),
+                                            success: function() {
+                                                onSaveFunc.call();
                                             },
                                             error: function() {
+                                                /* Reset the changed attributes on failure */
+                                                m.changed = c;
+
                                                 /* TODO:: Alert for the user on error */
                                                 console.log('ERROR:');
                                                 console.log(arguments);
@@ -899,67 +633,161 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
                         },{
                             label: '{{ _('Cancel') }}', type: 'cancel',
                             extraClasses: ['btn-danger'],
+                            icon: 'fa fa-lg fa-close',
                             register: function(btn) {
                                 btn.click(function() {
-                                    properties();
+                                    // Removing the action-mode
+                                    panel.$container.removeAttr('action-mode');
+                                    onCancelFunc.call(arguments);
                                 });
                             }
                         },{
                             label: '{{ _("Reset") }}', type: 'reset',
                             extraClasses: ['btn-warning'],
+                            icon: 'fa fa-lg fa-recycle',
                             register: function(btn) {
                                 btn.click(function() {
-                                    setTimeout(function() { editFunc(); }, 100);
+                                    setTimeout(function() { editFunc.call(); }, 0);
                                 });
                             }
                         }]);
-                    }
+                    };
                     // Show contents after buttons
                     j.append(content);
+                },
+                closePanel = function() {
+                    // Closing this panel
+                    panel.close()
+                },
+                updateTreeItem = function() {
+                    // Update the item lable (if lable is modified.)
+                    tree.setLabel(item, {label: view.model.get("name")});
+                    panel.$container.removeAttr('action-mode');
+                    setTimeout(function() { properties(); }, 0);
+                },
+                saveNewNode = function() {
+                    /* TODO:: Create new tree node for this */
+                    if (view.model.tnode) {
+                        var d = _.extend({}, view.model.tnode),
+                            func = function(i) {
+                                /* Register this panel for this node */
+                                pgBrowser.Node.panels =
+                                    pgBrowser.Node.panels || {};
+                                pgBrowser.Node.panels[d.id] = panel;
+                                panel.title(that.title(d));
+                                setTimeout(function() {
+                                    that.showProperties(i, d, panel,
+                                        'properties');
+                                }, 0);
+                                tree.setVisible(i);
+                                tree.select(i);
+                            };
+
+                        delete view.model.tnode;
+
+                        if (that.parent_type) {
+                            if (tree.wasLoad(item)) {
+                                tree.append(item, {
+                                    itemData: d,
+                                    success: function(i, o) {
+                                        func(o.items.eq(0));
+                                    }
+                                });
+                            } else {
+                                tree.open(item, {
+                                    success: function() {
+                                        var s = tree.search(item, {
+                                            search: d.id,
+                                            callback: function(i, s) {
+                                                var data = tree.itemData(i);
+
+                                                return (d._id == data._id);
+                                            },
+                                            success: function(i, o) {
+                                                func(i);
+                                            }
+                                        });
+
+                                    }
+                                });
+                            }
+                        } else {
+                            tree.append(null, {
+                                itemData: d,
+                                success: function(i, o) {
+                                    func(i);
+                                }
+                            });
+                        }
+                    }
+                },
+                editInNewPanel = function() {
+                    // Open edit in separate panel
+                    setTimeout(function() {
+                        that.callbacks.show_obj_properties.apply(that, [{
+                            'action': 'edit',
+                            'item': item
+                        }]);
+                    }, 0);
+                },
+                onCancelFunc = properties,
+                onSaveFunc = updateTreeItem,
+                onEdit = editFunc;
+
+            if (action) {
+                if (action == 'create'){
+                    onCancelFunc = closePanel;
+                    onSaveFunc = saveNewNode;
+                }
+                if (action != 'properties') {
+                    // We need to keep track edit/create mode for this panel.
+                    editFunc();
+                } else {
+                    properties();
+                }
+            } else {
+                /* Show properties */
+                properties();
+                onEdit = editInNewPanel;
+            }
+        },
+        /**********************************************************************
+         * Generate the URL for different operations
+         *
+         * arguments:
+         *   type:    Create/drop/edit/properties/sql/depends/statistics
+         *   d:       Provide the ItemData for the current item node
+         *   with_id: Required id information at the end?
+         *
+         * Supports url generation for create, drop, edit, properties, sql,
+         * depends, statistics
+         */
+        generate_url: function(type, d, with_id) {
+            var url = pgAdmin.Browser.URL + '{TYPE}/{REDIRECT}{REF}',
+                ref = S('/%s/').sprintf(d._id).value(),
+                opURL = {
+                    'create': 'obj', 'drop': 'obj', 'edit': 'obj',
+                    'properties': 'obj', 'depends': 'deps',
+                    'statistics': 'stats'
                 };
 
-            /* Show properties */
-            properties();
-        },
-        // What am I refering to (parent or me)?
-        reference: function(d, with_id) {
             if (d._type == this.type) {
-                var res = '';
+                ref = '';
                 if (d.refid)
-                    res = S('/%s').sprintf(d.refid).value();
+                    ref = S('/%s').sprintf(d.refid).value();
                 if (with_id)
-                    res = S('%s/%s').sprintf(res, d._id).value();
-                return res;
+                    ref = S('%s/%s').sprintf(ref, d._id).value();
             }
-            return S('/%s/').sprintf(d._id);
-        },
-        // Generate the URL for different purposes
-        generate_url: function(type, data, with_id) {
-            var url = pgAdmin.Browser.URL + '{TYPE}/{REDIRECT}{REF}';
-            var args = { 'TYPE': this.type, 'REDIRECT': '',
-                'REF': this.reference(data, with_id) };
 
-            switch(type) {
-                case 'create':
-                    if (!this.parent_type) {
-                        args.REF = '/';
-                    }
-                case 'drop':
-                case 'properties':
-                case 'edit':
-                    args.REDIRECT = 'obj';
-                    break;
-                case 'sql':
-                    args.REDIRECT = 'sql';
-                    break;
-                case 'depends':
-                    args.REDIRECT = 'deps';
-                    break;
-                case 'statistics':
-                    args.REDIRECT = 'stats';
-                    break;
-                default:
-                    return null;
+            var args = { 'TYPE': this.type, 'REDIRECT': '', 'REF': ref };
+
+            if (type in opURL) {
+                args.REDIRECT = opURL[type];
+                if (type == 'create' && !this.parent_type) {
+                    args.REF = '/';
+                }
+            } else {
+                args.REDIRECT = type;
             }
 
             return url.replace(/{(\w+)}/g, function(match, arg) {
@@ -967,7 +795,15 @@ function($, _, S, pgAdmin, Menu, Backbone, Alertify, Backform) {
             });
         },
         // Base class for Node Model
-        Model: Backbone.Model
+        Model: Backbone.Model.extend({
+            parse: function(res) {
+                if ('node' in res && res['node']) {
+                    this.tnode = _.extend({}, res.node);
+                    delete res.node;
+                }
+                return res;
+            }
+        })
     });
 
     return pgAdmin.Browser.Node;

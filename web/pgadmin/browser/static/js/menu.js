@@ -32,7 +32,7 @@ function(_, pgAdmin, $) {
       if (this.icon) {
           url.append($('<i></i>', {'class': this.icon}));
       }
-      url.append($('<span></span>').text(this.label));
+      url.append($('<span></span>').text('  ' + this.label));
 
       return $('<li/>')
         .addClass('menu-item')

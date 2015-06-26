@@ -17,34 +17,24 @@ function($, _, pgAdmin, pgBrowser, alertify) {
 
         pgBrowser.add_menus([{
           name: 'create_server_on_sg', node: 'server-group', module: this,
-          applies: ['object', 'context'], callback: 'create_obj',
+          applies: ['object', 'context'], callback: 'show_obj_properties',
           category: 'create', priority: 1, label: '{{ _('Server...') }}',
-          icon: 'wcTabIcon icon-server'
+          data: {action: 'create'}, icon: 'wcTabIcon icon-server'
         }, {
-          name: 'create_server_on_sg_dlg', node: 'server-group', module: this,
-          applies: ['object', 'context'], callback: 'create_obj_dlg',
-          category: 'create', priority: 2, label: '{{ _('Server (Dialog)...') }}',
-          icon: 'wcTabIcon icon-server'
-        },{
           name: 'create_server', node: 'server', module: this,
-          applies: ['object', 'context'], callback: 'create_obj',
+          applies: ['object', 'context'], callback: 'show_obj_properties',
           category: 'create', priority: 3, label: '{{ _('Server...') }}',
-          icon: 'wcTabIcon icon-server'
-        }, {
-          name: 'create_server_dlg', node: 'server', module: this,
-          applies: ['object', 'context'], callback: 'create_obj_dlg',
-          category: 'create', priority: 4, label: '{{ _('Server (Dialog)...') }}',
-          icon: 'wcTabIcon icon-server'
+          data: {action: 'create'}, icon: 'wcTabIcon icon-server'
         }, {
           name: 'edit_server', node: 'server', module: this,
-          applies: ['object', 'context'], callback: 'edit_obj',
+          applies: ['object', 'context'], callback: 'show_obj_properties',
           category: 'edit', priority: 4, label: '{{ _('Edit...') }}',
-          icon: 'fa fa-lg fa-pencil-square-o'
+          data: {action: 'edit'}, icon: 'fa fa-pencil-square-o'
         },{
           name: 'drop_server', node: 'server', module: this,
           applies: ['object', 'context'], callback: 'delete_obj',
           category: 'drop', priority: 3, label: '{{ _('Drop Server...') }}',
-          icon: 'fa fa-lg fa-trash'
+          icon: 'fa fa-trash'
         }]);
       },
       callbacks: {

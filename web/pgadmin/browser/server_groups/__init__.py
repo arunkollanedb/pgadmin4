@@ -11,11 +11,12 @@
 from abc import ABCMeta, abstractmethod
 import traceback
 import json
-from flask import request, render_template, make_response
+from flask import request, render_template, make_response, jsonify
 from flask.ext.babel import gettext
 from flask.ext.security import current_user, login_required
 from pgadmin import current_blueprint
-from pgadmin.utils.ajax import make_json_response, make_response as ajax_response
+from pgadmin.utils.ajax import make_json_response, \
+    make_response as ajax_response
 from pgadmin.browser import BrowserPluginModule
 from pgadmin.utils.menu import MenuItem
 from pgadmin.settings.settings_model import db, ServerGroup
@@ -177,16 +178,21 @@ class ServerGroupView(NodeView):
 
         if data[u'name'] != '':
             try:
-                servergroup = ServerGroup(
+                sg = ServerGroup(
                     user_id=current_user.id,
                     name=data[u'name'])
-                db.session.add(servergroup)
+                db.session.add(sg)
                 db.session.commit()
 
-                data[u'id'] = servergroup.id
-                data[u'name'] = servergroup.name
+                data[u'id'] = sg.id
+                data[u'name'] = sg.name
 
-                return make_json_response(status=200, success=1, data=data)
+                return jsonify(node=blueprint.generate_browser_node(
+                    "%d" % (sg.id),
+                    None,
+                    sg.name,
+                    "icon-%s" % self.node_type,
+                    True))
             except Exception as e:
                 print 'except'
                 return make_json_response(

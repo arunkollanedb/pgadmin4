@@ -288,7 +288,10 @@ OWNER TO helpdesk;\n';
             });
 
             // Initialize the Docker
-            obj.docker = new wcDocker('#dockerContainer');
+            obj.docker = new wcDocker(
+                    '#dockerContainer', {
+                        allowContextMenu: false
+                    });
             if (obj.docker) {
                 // Initialize all the panels
                 _.each(obj.panels, function(panel, name) {
@@ -356,13 +359,20 @@ OWNER TO helpdesk;\n';
                             var o = undefined;
 
                             _.each(menus, function(m) {
-                                if (name == m.name) {
+                                if (name == (m.module.type + '_' + m.callback)) {
                                     o = m;
                                 }
                             });
 
                             if (o) {
-                                var cb = o.module['callbacks'] && o.module['callbacks'][o.callback] || o.module[o.callback];
+                                var cb;
+                                if (o.module['callbacks'] && (
+                                    o.callback in o.module['callbacks'])) {
+                                    cb = o.module['callbacks'][o.callback];
+                                } else if (o.callback in o.module) {
+                                    cb = o.module[o.callback];
+                                }
+
                                 if (cb) {
                                     cb.apply(o.module, [item, o.data]);
                                 } else {
@@ -371,7 +381,8 @@ OWNER TO helpdesk;\n';
                             }
                         };
 
-                    _.each(_.sortBy(
+                    _.each(
+                            _.sortBy(
                                 menus, function(m) { return m.priority; }),
                             function(m) {
                                 if (m.category == 'create')
@@ -466,10 +477,11 @@ OWNER TO helpdesk;\n';
                         {% endif %}{% if item.url %}url: "{{ item.url }}",
                         {% endif %}{% if item.target %}target: "{{ item.target }}",
                         {% endif %}{% if item.callback %}callback: "{{ item.callback }}",
+                        {% endif %}{% if item.icon %}icon: '{{ item.icon }}',
+                        {% endif %}{% if item.data %}data: {{ item.data }},
                         {% endif %}label: '{{ item.label }}', applies: ['{{ key.lower() }}'],
                         priority: {{ item.priority }},
-                        enable: '{{ item.enable }}'{% if item.icon %},
-                        icon: '{{ item.icon }}'{% endif %}
+                        enable: '{{ item.enable }}'
                     }{% set cnt = cnt + 1 %}{% endfor %}{% set cnt = cnt + 1 %}{% endfor %}]);
                     obj.create_menus();
                 } else {
