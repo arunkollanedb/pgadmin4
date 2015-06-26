@@ -26,8 +26,11 @@ try {
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="#"><i>{{ config.APP_NAME }}&nbsp;</i><i class="app-icon {{ config.APP_ICON }}"></i></a>
-   </div>
+      <a class="navbar-brand" href="#">
+        <i class="app-icon {{ config.APP_ICON }}"></i>
+        <span>&nbsp;{{ config.APP_NAME }}</span>
+      </a>
+    </div>
 
     <div class="collapse navbar-collapse" id="navbar-menu">
 

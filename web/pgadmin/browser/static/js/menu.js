@@ -19,10 +19,7 @@ function(_, pgAdmin, $) {
 
   _.extend(pgAdmin.Browser.MenuItem.prototype, {
     generate: function() {
-      return $('<li/>')
-        .addClass('menu-item')
-        .append(
-          $('<a></a>', {
+      var url = $('<a></a>', {
             'id': this.name,
             'href': this.url,
             'target': this.target,
@@ -31,9 +28,15 @@ function(_, pgAdmin, $) {
             module: this.module || pgAdmin.Browser,
             cb: this.callback,
             data: this.data
-          }).addClass('menu-link')
-          .append($('<i></i>', {'class': this.icon}))
-          .append($('<span></span>').text('  ' + this.label)));
+          }).addClass('menu-link');
+      if (this.icon) {
+          url.append($('<i></i>', {'class': this.icon}));
+      }
+      url.append($('<span></span>').text(this.label));
+
+      return $('<li/>')
+        .addClass('menu-item')
+        .append(url);
     },
     disabled: function(o) {
         if (_.isFunction(this.enable)) return !this.enable.apply(this.module, [this.data]);
