@@ -37,27 +37,28 @@ define(
         if (!alertify.myAlert) {
           alertify.dialog('myAlert', function factory() {
             return {
-              main:function(title, message, data) {
-                     this.set('title', title);
-                     this.message = message;
-                     this.data = data;
-                   },
-            setup:function() {
-                    return {
-                      buttons:[{ text: "Cancel", key: 27, className: "btn btn-danger"}],
-            focus: { element: 0 },
-            options: { modal: 0, title: this.title }
-                    };
-                  },
-            prepare:function() {
-                      this.setContent(this.message);
-                    },
-            callback:function(closeEvent) {
-                       alertify.alert('Close Event', 'You pressed: ' + closeEvent.button.text + ' on ' + this.data);
-                     }
+              main: function(title, message, data) {
+                this.set('title', title);
+                this.message = message;
+                this.data = data;
+              },
+              setup:function() {
+                return {
+                  buttons: [
+                    {text: "Cancel", key: 27, className: "btn btn-danger"}],
+                  focus: { element: 0 },
+                  options: { modal: 0, title: this.title }
+                };
+              },
+              prepare:function() {
+                this.setContent(this.message);
+              },
+              callback:function(closeEvent) {
+                alertify.alert('Close Event', 'You pressed: ' + closeEvent.button.text + ' on ' + this.data);
+              }
             }
           },
-            true /* Transient */ );
+          true /* Transient */ );
         }
 
         alertify.myAlert('Dialog Test',

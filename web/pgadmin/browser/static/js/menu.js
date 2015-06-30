@@ -20,17 +20,17 @@ function(_, pgAdmin, $) {
   _.extend(pgAdmin.Browser.MenuItem.prototype, {
     generate: function() {
       var url = $('<a></a>', {
-            'id': this.name,
-            'href': this.url,
-            'target': this.target,
-            'data-toggle': 'pg-menu'
-          }).data('pgMenu', {
-            module: this.module || pgAdmin.Browser,
-            cb: this.callback,
-            data: this.data
-          }).addClass('menu-link');
+          'id': this.name,
+          'href': this.url,
+          'target': this.target,
+          'data-toggle': 'pg-menu'
+        }).data('pgMenu', {
+          module: this.module || pgAdmin.Browser,
+          cb: this.callback,
+          data: this.data
+        }).addClass('menu-link');
       if (this.icon) {
-          url.append($('<i></i>', {'class': this.icon}));
+        url.append($('<i></i>', {'class': this.icon}));
       }
       url.append($('<span></span>').text('  ' + this.label));
 
@@ -39,13 +39,13 @@ function(_, pgAdmin, $) {
         .append(url);
     },
     disabled: function(o) {
-        if (_.isFunction(this.enable)) return !this.enable.apply(this.module, [this.data]);
-        if (_.isBoolean(this.enable)) return !this.enable;
-        if (this.module && _.isBoolean(this.module[this.enable])) return !this.module[this.enable];
-        if (this.module && _.isFunction(this.module[this.enable])) return !this.enable.apply(this.module, [this.data]);
-        if (_.isFunction(o[this.enable])) return !this.enable.apply(o, [this.data]);
+      if (_.isFunction(this.enable)) return !this.enable.apply(this.module, [this.data]);
+      if (_.isBoolean(this.enable)) return !this.enable;
+      if (this.module && _.isBoolean(this.module[this.enable])) return !this.module[this.enable];
+      if (this.module && _.isFunction(this.module[this.enable])) return !this.enable.apply(this.module, [this.data]);
+      if (_.isFunction(o[this.enable])) return !this.enable.apply(o, [this.data]);
 
-        return false;
+      return false;
     }
   });
 

@@ -126,7 +126,7 @@ MINIFY_HTML = True;
 
 # The schema version number for the configuration database
 # DO NOT CHANGE UNLESS YOU ARE A PGADMIN DEVELOPER!!
-SETTINGS_SCHEMA_VERSION = 2
+SETTINGS_SCHEMA_VERSION = 3
 
 # The default path to the SQLite database used to store user accounts and
 # settings. This default places the file in the same directory as this

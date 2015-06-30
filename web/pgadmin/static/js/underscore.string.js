@@ -64,7 +64,7 @@ module.exports = function(str, substr) {
   substr = makeString(substr);
 
   if (str.length === 0 || substr.length === 0) return 0;
-  
+
   return str.split(substr).length - 1;
 };
 
@@ -89,7 +89,7 @@ var makeString = _dereq_('./helper/makeString');
 function getIndent(str) {
   var matches = str.match(/^[\s\\t]*/gm);
   var indent = matches[0].length;
-  
+
   for (var i = 1; i < matches.length; i++) {
     indent = Math.min(matches[i].length, indent);
   }
@@ -448,7 +448,7 @@ module.exports = function levenshtein(str1, str2) {
   str1 = makeString(str1);
   str2 = makeString(str2);
 
-  // Short cut cases  
+  // Short cut cases
   if (str1 === str2) return 0;
   if (!str1 || !str2) return Math.max(str1.length, str2.length);
 

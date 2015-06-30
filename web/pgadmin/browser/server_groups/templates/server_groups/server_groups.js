@@ -50,6 +50,15 @@ function($, _, pgAdmin, Backbone) {
           return null;
         }
       }),
+      canDelete: function(i) {
+        var s = pgAdmin.Browser.tree.siblings(i, true);
+
+        /* This is the only server group - we can't remove it*/
+        if (!s || s.length == 0) {
+          return false;
+        }
+        return true;
+      },
       callbacks: {
         // Add a server group
         create_server_group: function() {

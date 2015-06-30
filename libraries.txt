@@ -17,4 +17,3 @@ Underscore.string 387ab72d49  MIT          http://epeli.github.io/underscore.str
 Backform.js       6270ec07e2  MIT          https://github.com/AmiliaApp/backform
 font-Awesome      4.3         SIL OFL      http://fortawesome.github.io/Font-Awesome/
 font-mfizz        1.2         MIT          http://fizzed.com/oss/font-mfizz
-

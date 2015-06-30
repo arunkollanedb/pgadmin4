@@ -154,7 +154,8 @@ class ServerNode(NodeView):
             'db': 'maintenance_db',
             'username': 'username',
             'sslmode': 'sslmode',
-            'gid': 'servergroup_id'
+            'gid': 'servergroup_id',
+            'comment': 'comment'
         }
 
         idx = 0
@@ -214,6 +215,7 @@ class ServerNode(NodeView):
                 'username': server.username,
                 'gid': server.servergroup_id,
                 'group-name': sg.name,
+                'comment': server.comment,
                 # TODO:: Make sure - we do have correct values here
                 'connected': True,
                 'version': 'PostgreSQL 9.3 (linux-x64)'
@@ -252,7 +254,8 @@ class ServerNode(NodeView):
                 port=data[u'port'],
                 maintenance_db=data[u'db'],
                 username=data[u'username'],
-                ssl_mode=data['sslmode']
+                ssl_mode=data['sslmode'],
+                comment=data['comment'] if 'comment' in data else None
             )
             db.session.add(server)
             db.session.commit()

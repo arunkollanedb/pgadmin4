@@ -1,4 +1,4 @@
-##########################################################################
+#########################################################################
 #
 # pgAdmin 4 - PostgreSQL Tools
 #
@@ -76,6 +76,7 @@ def do_setup():
     print ""
     print "The configuration database has been created at %s" % config.SQLITE_PATH
 
+
 def do_upgrade():
     """Upgrade an existing settings database"""
     # Setup Flask-Security
@@ -105,6 +106,8 @@ def do_upgrade():
         if int(version.value) < 2:
             # Create the 'server' table
             db.metadata.create_all(db.engine, tables=[Server.__table__])
+        elif int(version.value) < 3:
+            db.engine.execute('ALTER TABLE server ADD COLUMN comment TEXT(1024)');
 
         # Finally, update the schema version
         version.value = config.SETTINGS_SCHEMA_VERSION
